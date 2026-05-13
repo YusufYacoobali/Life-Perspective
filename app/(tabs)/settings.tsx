@@ -1,20 +1,23 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useTheme, ThemeMode } from '../../src/theme';
 import { useUserProfile } from '../../src/store/userProfileStore';
-
-// ─── primitives ──────────────────────────────────────────────────────────────
+import { useAppSettings } from '../../src/store/settingsStore';
+import { hapticLight } from '../../src/lib/haptics';
 
 function Row({
+  icon,
   label,
   value,
   onPress,
   destructive,
   isLast,
 }: {
+  icon?: React.ComponentProps<typeof Ionicons>['name'];
   label: string;
   value?: string;
   onPress?: () => void;
@@ -25,18 +28,21 @@ function Row({
   return (
     <TouchableOpacity
       onPress={onPress}
-      activeOpacity={onPress ? 0.55 : 1}
+      activeOpacity={onPress ? 0.6 : 1}
       style={[
         styles.row,
         !isLast && { borderBottomColor: colors.border, borderBottomWidth: StyleSheet.hairlineWidth },
       ]}
     >
-      <Text style={[styles.rowLabel, { color: destructive ? colors.destructive : colors.text }]}>
-        {label}
-      </Text>
-      {value != null && (
-        <Text style={[styles.rowValue, { color: colors.textTertiary }]}>{value}</Text>
-      )}
+      <View style={styles.rowLeft}>
+        {icon ? (
+          <Ionicons name={icon} size={17} color={destructive ? colors.destructive : colors.textTertiary} />
+        ) : null}
+        <Text style={[styles.rowLabel, { color: destructive ? colors.destructive : colors.text }]}>
+          {label}
+        </Text>
+      </View>
+      {value != null ? <Text style={[styles.rowValue, { color: colors.textTertiary }]}>{value}</Text> : null}
     </TouchableOpacity>
   );
 }
@@ -45,36 +51,35 @@ function Section({ title, children }: { title?: string; children: React.ReactNod
   const { colors, isDark } = useTheme();
   return (
     <View style={styles.section}>
-      {title != null && (
-        <Text style={[styles.sectionTitle, { color: colors.textTertiary }]}>{title}</Text>
-      )}
-      <View style={[
-        styles.sectionCard,
-        {
-          backgroundColor: isDark ? 'rgba(255,255,255,0.025)' : 'rgba(0,0,0,0.025)',
-          borderColor: isDark ? 'rgba(255,255,255,0.055)' : 'rgba(0,0,0,0.055)',
-        },
-      ]}>
+      {title ? <Text style={[styles.sectionTitle, { color: colors.accentWarm }]}>{title}</Text> : null}
+      <View
+        style={[
+          styles.sectionPanel,
+          {
+            backgroundColor: isDark ? 'rgba(255,255,255,0.045)' : 'rgba(255,255,255,0.68)',
+            borderColor: isDark ? 'rgba(255,255,255,0.09)' : 'rgba(17,17,20,0.09)',
+          },
+        ]}
+      >
         {children}
       </View>
     </View>
   );
 }
 
-// ─── screen ──────────────────────────────────────────────────────────────────
-
 export default function SettingsScreen() {
   const { colors, isDark, mode, setMode } = useTheme();
   const { profile, stats, clear } = useUserProfile();
+  const { settings, setHapticsEnabled } = useAppSettings();
 
-  const gradientColors: [string, string] = isDark
-    ? ['#0C0C12', '#070709']
-    : ['#FAF7F3', '#F5F2EE'];
+  const gradientColors: [string, string, string] = isDark
+    ? ['#07080A', '#101216', '#07080A']
+    : ['#F7F3EA', '#F1EFE8', '#F7F3EA'];
 
   const handleReset = () => {
     Alert.alert(
       'Reset All Data',
-      'This will permanently delete your profile and all settings.',
+      'This will permanently delete your profile and local settings.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -89,51 +94,48 @@ export default function SettingsScreen() {
     );
   };
 
-  const themeOptions: { label: string; value: ThemeMode }[] = [
-    { label: 'System', value: 'system' },
-    { label: 'Light', value: 'light' },
-    { label: 'Dark', value: 'dark' },
+  const themeOptions: { label: string; value: ThemeMode; icon: React.ComponentProps<typeof Ionicons>['name'] }[] = [
+    { label: 'System', value: 'system', icon: 'phone-portrait-outline' },
+    { label: 'Light', value: 'light', icon: 'sunny-outline' },
+    { label: 'Dark', value: 'dark', icon: 'moon-outline' },
   ];
 
   return (
-    <LinearGradient colors={gradientColors} style={{ flex: 1 }}>
-      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
-        <ScrollView
-          contentContainerStyle={styles.content}
-          showsVerticalScrollIndicator={false}
-        >
-          <Text style={[styles.screenTitle, { color: colors.text }]}>Settings</Text>
+    <LinearGradient colors={gradientColors} style={styles.root}>
+      <SafeAreaView style={styles.safe} edges={['top']}>
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          <View style={styles.header}>
+            <Text style={[styles.kicker, { color: colors.accentWarm }]}>CONTROL ROOM</Text>
+            <Text style={[styles.title, { color: colors.text }]}>Settings</Text>
+          </View>
 
-          {/* Profile info */}
-          {profile && stats && (
+          {profile && stats ? (
             <Section title="PROFILE">
-              <Row label={profile.countryName} value="Country" />
+              <Row icon="earth-outline" label={profile.countryName} value="Country" />
               <Row
+                icon="calendar-outline"
                 label={new Date(profile.dateOfBirth).toLocaleDateString(undefined, {
-                  year: 'numeric', month: 'long', day: 'numeric',
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric',
                 })}
-                value="Date of birth"
+                value="Birth date"
               />
-              <Row label={profile.gender === 'male' ? 'Male' : 'Female'} value="Sex" />
-              <Row
-                label={`~${stats.estimatedLifeExpectancyYears} years`}
-                value="Est. lifespan"
-                isLast
-              />
+              <Row icon="person-outline" label={profile.gender === 'male' ? 'Male' : 'Female'} value="Sex" />
+              <Row icon="hourglass-outline" label={`~${stats.estimatedLifeExpectancyYears} years`} value="Estimate" isLast />
             </Section>
-          )}
+          ) : null}
 
-          {/* Edit profile */}
-          {profile && (
+          {profile ? (
             <TouchableOpacity
               onPress={() => router.push('/onboarding')}
-              style={[styles.editBtn, { borderColor: colors.accentWarm }]}
+              style={[styles.editButton, { borderColor: colors.accentWarm, backgroundColor: colors.accentSoft }]}
             >
-              <Text style={[styles.editBtnText, { color: colors.accentWarm }]}>Edit Profile</Text>
+              <Ionicons name="create-outline" size={17} color={colors.accentWarm} />
+              <Text style={[styles.editText, { color: colors.accentWarm }]}>Edit profile inputs</Text>
             </TouchableOpacity>
-          )}
+          ) : null}
 
-          {/* Appearance */}
           <Section title="APPEARANCE">
             <View style={styles.themeRow}>
               {themeOptions.map((opt) => {
@@ -143,17 +145,15 @@ export default function SettingsScreen() {
                     key={opt.value}
                     onPress={() => setMode(opt.value)}
                     style={[
-                      styles.themeBtn,
+                      styles.themeButton,
                       {
                         backgroundColor: active ? colors.accentWarm : 'transparent',
                         borderColor: active ? colors.accentWarm : colors.border,
                       },
                     ]}
                   >
-                    <Text style={[
-                      styles.themeBtnText,
-                      { color: active ? '#fff' : colors.textSecondary },
-                    ]}>
+                    <Ionicons name={opt.icon} size={16} color={active ? '#fff' : colors.textSecondary} />
+                    <Text style={[styles.themeText, { color: active ? '#fff' : colors.textSecondary }]}>
                       {opt.label}
                     </Text>
                   </TouchableOpacity>
@@ -162,54 +162,92 @@ export default function SettingsScreen() {
             </View>
           </Section>
 
-          {/* About */}
-          <Section title="ABOUT">
-            <Row label="Time Left" value="v1.0.0" isLast />
+          <Section title="PREFERENCES">
+            <View
+              style={[
+                styles.row,
+                { borderBottomColor: colors.border },
+              ]}
+            >
+              <View style={styles.rowLeft}>
+                <Ionicons name="phone-portrait-outline" size={17} color={colors.textTertiary} />
+                <Text style={[styles.rowLabel, { color: colors.text }]}>Haptic feedback</Text>
+              </View>
+              <Switch
+                value={settings.hapticsEnabled}
+                onValueChange={(val) => {
+                  hapticLight();
+                  setHapticsEnabled(val);
+                }}
+                trackColor={{ false: colors.border, true: colors.accentWarm }}
+                thumbColor="#fff"
+              />
+            </View>
           </Section>
 
-          {/* Disclaimer */}
+          <Section title="WIDGETS">
+            <Row icon="phone-portrait-outline" label="Android widgets" value="Enabled in dev build" />
+            <Row icon="logo-apple" label="iOS widgets" value="WidgetKit target" isLast />
+          </Section>
+
+          <Section title="ABOUT">
+            <Row icon="sparkles-outline" label="Life Perspective" value="v1.0.0" isLast />
+          </Section>
+
           <Text style={[styles.disclaimer, { color: colors.textTertiary }]}>
-            This app provides an approximate life expectancy estimate based on statistical and
-            lifestyle factors. For reflection only — not medical advice.
+            This app provides an approximate life expectancy estimate based on broad statistical and lifestyle factors.
+            It is intended for reflection only and is not medical, health or financial advice.
           </Text>
 
-          {/* Danger */}
           <Section>
-            <Row label="Reset All Data" onPress={handleReset} destructive isLast />
+            <Row icon="trash-outline" label="Reset All Data" onPress={handleReset} destructive isLast />
           </Section>
-
         </ScrollView>
       </SafeAreaView>
     </LinearGradient>
   );
 }
 
-// ─── styles ──────────────────────────────────────────────────────────────────
-
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 64, gap: 16 },
-  screenTitle: { fontSize: 28, fontWeight: '200', letterSpacing: -1 },
-
-  section: { gap: 7 },
-  sectionTitle: { fontSize: 10, fontWeight: '600', letterSpacing: 1.8, marginLeft: 4 },
-  sectionCard: { borderRadius: 14, borderWidth: 1, overflow: 'hidden' },
-
+  root: { flex: 1 },
+  safe: { flex: 1 },
+  content: { paddingHorizontal: 18, paddingTop: 14, paddingBottom: 88, gap: 16 },
+  header: { gap: 7 },
+  kicker: { fontSize: 11, fontWeight: '800', letterSpacing: 2.4 },
+  title: { fontSize: 38, lineHeight: 44, fontWeight: '200' },
+  section: { gap: 8 },
+  sectionTitle: { fontSize: 10, fontWeight: '800', letterSpacing: 2 },
+  sectionPanel: { borderRadius: 8, borderWidth: 1, overflow: 'hidden' },
   row: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 15,
     paddingVertical: 14,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: 12,
   },
-  rowLabel: { fontSize: 15, fontWeight: '300' },
-  rowValue: { fontSize: 12 },
-
-  editBtn: { borderWidth: 1, borderRadius: 12, paddingVertical: 13, alignItems: 'center' },
-  editBtnText: { fontSize: 15, fontWeight: '500' },
-
+  rowLeft: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
+  rowLabel: { fontSize: 15, fontWeight: '400' },
+  rowValue: { fontSize: 12, textAlign: 'right' },
+  editButton: {
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingVertical: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
+  },
+  editText: { fontSize: 14, fontWeight: '800' },
   themeRow: { flexDirection: 'row', padding: 10, gap: 8 },
-  themeBtn: { flex: 1, paddingVertical: 10, borderRadius: 10, borderWidth: 1, alignItems: 'center' },
-  themeBtnText: { fontSize: 13, fontWeight: '500' },
-
-  disclaimer: { fontSize: 11, lineHeight: 18, paddingHorizontal: 4 },
+  themeButton: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: 'center',
+    gap: 5,
+  },
+  themeText: { fontSize: 12, fontWeight: '700' },
+  disclaimer: { fontSize: 12, lineHeight: 18, paddingHorizontal: 4 },
 });

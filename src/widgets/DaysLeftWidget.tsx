@@ -8,7 +8,7 @@ interface DaysLeftWidgetProps {
 }
 
 export function DaysLeftWidget({ daysRemaining, yearsRemaining, quote }: DaysLeftWidgetProps) {
-  const shortQuote = quote.length > 55 ? quote.slice(0, 52) + '...' : quote;
+  const shortQuote = quote.length > 58 ? `${quote.slice(0, 55)}...` : quote;
 
   return (
     <FlexWidget
@@ -17,46 +17,44 @@ export function DaysLeftWidget({ daysRemaining, yearsRemaining, quote }: DaysLef
         width: 'match_parent',
         flexDirection: 'column',
         justifyContent: 'space-between',
-        backgroundColor: '#111111',
-        borderRadius: 16,
-        padding: 16,
+        backgroundColor: '#07080A',
+        borderRadius: 18,
+        padding: 15,
       }}
       clickAction="OPEN_APP"
     >
-      <FlexWidget style={{ flexDirection: 'column' }}>
-        <TextWidget
-          text={`~${daysRemaining.toLocaleString()}`}
-          style={{
-            fontSize: 32,
-            color: '#F2EFE8',
-            fontWeight: '200',
-          }}
-        />
-        <TextWidget
-          text="days left"
-          style={{
-            fontSize: 12,
-            color: '#8E8E93',
-          }}
-        />
+      <FlexWidget style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+        <TextWidget text="DAYS LEFT" style={{ fontSize: 9, color: '#FF8A47', fontWeight: '700' }} />
+        <TextWidget text={`${yearsRemaining}y`} style={{ fontSize: 13, color: '#55C7C1', fontWeight: '700' }} />
       </FlexWidget>
 
       <FlexWidget style={{ flexDirection: 'column' }}>
         <TextWidget
-          text={`${yearsRemaining} years remaining`}
-          style={{
-            fontSize: 11,
-            color: '#6BA3C4',
-          }}
+          text={daysRemaining.toLocaleString()}
+          style={{ fontSize: 38, color: '#F7F2E8', fontWeight: '200' }}
         />
         <TextWidget
-          text={`"${shortQuote}"`}
-          style={{
-            fontSize: 10,
-            color: '#48484A',
-          }}
+          text="estimated full days remaining"
+          style={{ fontSize: 10, color: '#A7A0A0' }}
         />
       </FlexWidget>
+
+      <FlexWidget style={{ flexDirection: 'row' }}>
+        {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+          <FlexWidget
+            key={i}
+            style={{
+              width: 11,
+              height: 11,
+              borderRadius: 6,
+              marginRight: 4,
+              backgroundColor: i < 5 ? '#6E7A8F' : i === 5 ? '#FF8A47' : '#20242C',
+            }}
+          />
+        ))}
+      </FlexWidget>
+
+      <TextWidget text={shortQuote} style={{ fontSize: 10, color: '#5E6068' }} />
     </FlexWidget>
   );
 }

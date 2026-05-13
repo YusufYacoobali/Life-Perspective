@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Animated, StyleSheet, Dimensions } from 'react-native';
 import { useTheme } from '../../theme';
+import { hapticSelection } from '../../lib/haptics';
 
 export type Unit = 'years' | 'months' | 'weeks' | 'days';
 
@@ -55,7 +56,7 @@ export function TimeUnitToggle({ unit, onChange }: TimeUnitToggleProps) {
       {UNITS.map((u, i) => (
         <TouchableOpacity
           key={u.key}
-          onPress={() => onChange(u.key)}
+          onPress={() => { hapticSelection(); onChange(u.key); }}
           style={[styles.tab, { width: TAB_WIDTH }]}
           activeOpacity={0.7}
         >

@@ -10,7 +10,7 @@ export const QUOTES: Quote[] = [
   { text: 'Your time is limited, so do not waste it living someone else\'s life.', author: 'Steve Jobs' },
   { text: 'Time is what we want most, but what we use worst.', author: 'William Penn' },
   { text: 'The bad news is time flies. The good news is you\'re the pilot.', author: 'Michael Altshuler' },
-  { text: 'In the end, it\'s not the years in your life that count. It\'s the life in your years.', author: 'Abraham Lincoln' },
+  { text: 'In the end, it\'s not the years in your life that count. It\'s the life in your years.', author: 'Edward J. Stieglitz' },
   { text: 'Time is the most valuable thing a man can spend.', author: 'Theophrastus' },
   { text: 'Dost thou love life? Then do not squander time, for that is the stuff life is made of.', author: 'Benjamin Franklin' },
   { text: 'The two most powerful warriors are patience and time.', author: 'Leo Tolstoy' },
@@ -33,7 +33,7 @@ export const QUOTES: Quote[] = [
   { text: 'One day you will wake up and there won\'t be any more time to do the things you\'ve always wanted.', author: 'Paulo Coelho' },
   { text: 'Guard well your spare moments. They are like uncut diamonds.', author: 'Ralph Waldo Emerson' },
   { text: 'The purpose of life is to live it, to taste experience to the utmost.', author: 'Eleanor Roosevelt' },
-  { text: 'Life is not measured by the number of breaths we take, but by the moments that take our breath away.', author: 'Maya Angelou' },
+  { text: 'Life is not measured by the number of breaths you take, but by every moment that takes your breath away.', author: 'Vicki Corona' },
 ];
 
 export function getDailyQuote(): Quote {

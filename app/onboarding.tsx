@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useMemo, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,14 +11,17 @@ import {
   Animated,
 } from 'react-native';
 import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../src/theme';
 import { AppButton } from '../src/components/AppButton';
 import { AppInput } from '../src/components/AppInput';
 import { saveProfile } from '../src/store/userProfileStore';
 import { COUNTRIES } from '../src/lib/countryData';
+import { calculateLifeExpectancy } from '../src/lib/lifeExpectancy';
 import { Gender, SmokingStatus, ActivityLevel, UserProfile } from '../src/types/user';
 import { isReasonableAge, isValidHeight, isValidWeight, ftToCm, lbsToKg } from '../src/lib/validation';
+import { hapticLight, hapticSelection } from '../src/lib/haptics';
 
 const { width } = Dimensions.get('window');
 const TOTAL_STEPS = 9;
@@ -40,6 +43,7 @@ interface OnboardingData {
   weightUnit: 'kg' | 'lbs';
   smokingStatus: SmokingStatus | '';
   activityLevel: ActivityLevel | '';
+  overrideLifeExpectancyYears: string;
 }
 
 const INITIAL_DATA: OnboardingData = {
@@ -59,7 +63,15 @@ const INITIAL_DATA: OnboardingData = {
   weightUnit: 'kg',
   smokingStatus: '',
   activityLevel: '',
+  overrideLifeExpectancyYears: '',
 };
+
+function getAgeYears(dateString: string): number {
+  if (!dateString) return 0;
+  const dob = new Date(dateString);
+  const now = new Date();
+  return Math.max(0, Math.floor((now.getTime() - dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000)));
+}
 
 function ProgressDots({ current, total, color, trackColor }: { current: number; total: number; color: string; trackColor: string }) {
   return (
@@ -91,7 +103,7 @@ function ChipButton({
 }) {
   return (
     <TouchableOpacity
-      onPress={onPress}
+      onPress={() => { hapticSelection(); onPress(); }}
       activeOpacity={0.75}
       style={[
         styles.chip,
@@ -136,13 +148,14 @@ export default function OnboardingScreen() {
   };
 
   const goNext = () => {
-    if (!validateStep()) return;
+    if (!validateStep()) { hapticLight(); return; }
+    hapticLight();
     if (step < TOTAL_STEPS) animateStep(step + 1);
     else handleComplete();
   };
 
   const goBack = () => {
-    if (step > 1) animateStep(step - 1);
+    if (step > 1) { hapticLight(); animateStep(step - 1); }
   };
 
   const validateStep = (): boolean => {
@@ -154,11 +167,36 @@ export default function OnboardingScreen() {
       const day = parseInt(data.dobDay);
       const month = parseInt(data.dobMonth);
       const year = parseInt(data.dobYear);
-      if (!day || !month || !year || day < 1 || day > 31 || month < 1 || month > 12 || year < 1900) {
-        setError('Please enter a valid date of birth.');
+      if (!data.dobDay || !data.dobMonth || !data.dobYear) {
+        setError('Please enter your date of birth.');
+        return false;
+      }
+      if (!day || day < 1 || day > 31) {
+        setError('Day must be between 1 and 31.');
+        return false;
+      }
+      if (!month || month < 1 || month > 12) {
+        setError('Month must be between 1 and 12.');
+        return false;
+      }
+      if (!year || year < 1900 || year > new Date().getFullYear()) {
+        setError(`Year must be between 1900 and ${new Date().getFullYear()}.`);
         return false;
       }
       const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const parsed = new Date(year, month - 1, day);
+      if (
+        parsed.getFullYear() !== year ||
+        parsed.getMonth() !== month - 1 ||
+        parsed.getDate() !== day
+      ) {
+        setError('Please enter a real calendar date.');
+        return false;
+      }
+      if (parsed >= new Date()) {
+        setError('Date of birth must be in the past.');
+        return false;
+      }
       const ageCheck = isReasonableAge(dateStr);
       if (!ageCheck.valid) { setError(ageCheck.message!); return false; }
       update({ dateOfBirth: dateStr });
@@ -193,6 +231,24 @@ export default function OnboardingScreen() {
       setError('Please select your activity level.');
       return false;
     }
+    if (step === 9) {
+      const currentAge = getAgeYears(data.dateOfBirth);
+      const override = data.overrideLifeExpectancyYears.trim()
+        ? parseFloat(data.overrideLifeExpectancyYears)
+        : null;
+      if (override !== null && (!Number.isFinite(override) || override < 40 || override > 150)) {
+        setError('Override must be between 40 and 150 years.');
+        return false;
+      }
+      if (override !== null && override <= currentAge) {
+        setError('Override must be greater than your current age.');
+        return false;
+      }
+      if (estimatedLifeYears <= currentAge && override === null) {
+        setError('The estimate is below your current age. Please set a custom target age.');
+        return false;
+      }
+    }
     return true;
   };
 
@@ -206,6 +262,9 @@ export default function OnboardingScreen() {
       weightKg: data.weightKg ? parseFloat(data.weightKg) : null,
       smokingStatus: data.smokingStatus as SmokingStatus,
       activityLevel: data.activityLevel as ActivityLevel,
+      overrideLifeExpectancyYears: data.overrideLifeExpectancyYears.trim()
+        ? Math.round(parseFloat(data.overrideLifeExpectancyYears))
+        : null,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -219,6 +278,36 @@ export default function OnboardingScreen() {
       )
     : COUNTRIES;
 
+  const provisionalProfile = useMemo<UserProfile | null>(() => {
+    if (
+      !data.countryCode ||
+      !data.dateOfBirth ||
+      !data.gender ||
+      !data.smokingStatus ||
+      !data.activityLevel
+    ) {
+      return null;
+    }
+
+    return {
+      countryCode: data.countryCode,
+      countryName: data.countryName,
+      dateOfBirth: data.dateOfBirth,
+      gender: data.gender as Gender,
+      heightCm: data.heightCm ? parseFloat(data.heightCm) : null,
+      weightKg: data.weightKg ? parseFloat(data.weightKg) : null,
+      smokingStatus: data.smokingStatus as SmokingStatus,
+      activityLevel: data.activityLevel as ActivityLevel,
+      overrideLifeExpectancyYears: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+  }, [data]);
+
+  const estimatedLifeYears = provisionalProfile ? calculateLifeExpectancy(provisionalProfile) : 0;
+  const currentAgeYears = getAgeYears(data.dateOfBirth);
+  const estimateIsPast = estimatedLifeYears > 0 && estimatedLifeYears <= currentAgeYears;
+
   const s = styles;
 
   return (
@@ -231,7 +320,7 @@ export default function OnboardingScreen() {
         <View style={s.header}>
           {step > 1 ? (
             <TouchableOpacity onPress={goBack} style={s.backBtn}>
-              <Text style={[s.backText, { color: colors.textSecondary }]}>←</Text>
+              <Ionicons name="chevron-back" size={22} color={colors.textSecondary} />
             </TouchableOpacity>
           ) : (
             <View style={{ width: 40 }} />
@@ -277,7 +366,7 @@ export default function OnboardingScreen() {
                     {filteredCountries.map((c) => (
                       <TouchableOpacity
                         key={c.code}
-                        onPress={() => update({ countryCode: c.code, countryName: c.name })}
+                        onPress={() => { hapticSelection(); update({ countryCode: c.code, countryName: c.name }); }}
                         style={[
                           s.countryItem,
                           { borderBottomColor: colors.border },
@@ -286,7 +375,7 @@ export default function OnboardingScreen() {
                       >
                         <Text style={[s.countryText, { color: colors.text }]}>{c.name}</Text>
                         {data.countryCode === c.code && (
-                          <Text style={{ color: colors.accent }}>✓</Text>
+                          <Ionicons name="checkmark-circle" size={18} color={colors.accent} />
                         )}
                       </TouchableOpacity>
                     ))}
@@ -452,7 +541,7 @@ export default function OnboardingScreen() {
                   ).map(([val, label, desc]) => (
                     <TouchableOpacity
                       key={val}
-                      onPress={() => update({ activityLevel: val })}
+                      onPress={() => { hapticSelection(); update({ activityLevel: val }); }}
                       activeOpacity={0.75}
                       style={[
                         s.activityItem,
@@ -467,7 +556,7 @@ export default function OnboardingScreen() {
                         <Text style={[s.activityDesc, { color: colors.textSecondary }]}>{desc}</Text>
                       </View>
                       {data.activityLevel === val && (
-                        <Text style={{ color: colors.accent }}>✓</Text>
+                        <Ionicons name="checkmark-circle" size={18} color={colors.accent} />
                       )}
                     </TouchableOpacity>
                   ))}
@@ -480,8 +569,31 @@ export default function OnboardingScreen() {
               <View style={s.stepContainer}>
                 <Text style={[s.stepTitle, { color: colors.text }]}>You're{'\n'}all set.</Text>
                 <Text style={[s.stepSubtitle, { color: colors.textSecondary }]}>
-                  We've estimated your lifespan based on your profile. This is for reflection only — make it count.
+                  Based on your country, age and lifestyle inputs, your current estimate is around {estimatedLifeYears || '--'} years.
                 </Text>
+                <View style={[s.estimatePanel, { backgroundColor: colors.surface, borderColor: estimateIsPast ? colors.destructive : colors.border }]}>
+                  <Text style={[s.estimateLabel, { color: colors.textTertiary }]}>EXPECTED LIFESPAN</Text>
+                  <Text style={[s.estimateNumber, { color: estimateIsPast ? colors.destructive : colors.text }]}>
+                    {estimatedLifeYears || '--'}
+                  </Text>
+                  <Text style={[s.estimateCopy, { color: colors.textSecondary }]}>
+                    This may be much longer or shorter. It is a broad statistical estimate, not a prediction.
+                  </Text>
+                  {estimateIsPast ? (
+                    <Text style={[s.estimateWarning, { color: colors.destructive }]}>
+                      This estimate is below your current age of {currentAgeYears}. Set a custom target age to continue.
+                    </Text>
+                  ) : null}
+                </View>
+                <AppInput
+                  label="Override target age"
+                  value={data.overrideLifeExpectancyYears}
+                  onChangeText={(v) => update({ overrideLifeExpectancyYears: v.replace(/[^0-9.]/g, '') })}
+                  placeholder="Optional, 40-150"
+                  keyboardType="decimal-pad"
+                  maxLength={5}
+                  autoCapitalize="none"
+                />
                 <Text style={[s.disclaimer, { color: colors.textTertiary, borderColor: colors.border }]}>
                   This app provides an approximate life expectancy estimate based on broad statistical and lifestyle factors. It is intended for reflection only and is not medical, health or financial advice.
                 </Text>
@@ -496,7 +608,7 @@ export default function OnboardingScreen() {
 
         <View style={[s.footer, { borderTopColor: colors.border }]}>
           <AppButton
-            label={step === TOTAL_STEPS ? 'See Your Time Left' : step === 1 ? 'Get Started' : 'Continue'}
+            label={step === TOTAL_STEPS ? 'See Your Perspective' : step === 1 ? 'Get Started' : 'Continue'}
             onPress={goNext}
             size="lg"
           />
@@ -516,17 +628,16 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 16,
   },
-  backBtn: { width: 40, height: 40, justifyContent: 'center' },
-  backText: { fontSize: 22 },
+  backBtn: { width: 40, height: 40, justifyContent: 'center', alignItems: 'flex-start' },
   dots: { flexDirection: 'row', gap: 5, alignItems: 'center' },
   dot: { width: 6, height: 6, borderRadius: 3 },
-  scrollContent: { paddingHorizontal: 24, paddingBottom: 24, flexGrow: 1 },
+  scrollContent: { paddingHorizontal: 24, paddingBottom: 24, flexGrow: 1, justifyContent: 'center' },
   stepContainer: { gap: 20 },
   stepTitle: {
-    fontSize: 40,
+    fontSize: 42,
     fontWeight: '200',
-    letterSpacing: -1.5,
-    lineHeight: 48,
+    letterSpacing: 0,
+    lineHeight: 50,
   },
   stepSubtitle: {
     fontSize: 16,
@@ -537,8 +648,8 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 18,
     borderWidth: 1,
-    borderRadius: 10,
-    padding: 12,
+    borderRadius: 8,
+    padding: 14,
   },
   chipRow: { flexDirection: 'row', gap: 12 },
   chipColumn: { gap: 10 },
@@ -546,16 +657,16 @@ const styles = StyleSheet.create({
   chip: {
     paddingVertical: 12,
     paddingHorizontal: 20,
-    borderRadius: 10,
+    borderRadius: 8,
     borderWidth: 1,
     flex: 1,
     alignItems: 'center',
   },
-  chipText: { fontSize: 15, fontWeight: '500' },
+  chipText: { fontSize: 15, fontWeight: '700' },
   dobRow: { flexDirection: 'row', gap: 8 },
   countryList: {
     borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: 8,
     height: 280,
     overflow: 'hidden',
   },
@@ -572,12 +683,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 14,
-    borderRadius: 12,
+    borderRadius: 8,
     borderWidth: 1,
     gap: 12,
   },
-  activityLabel: { fontSize: 15, fontWeight: '500' },
+  activityLabel: { fontSize: 15, fontWeight: '700' },
   activityDesc: { fontSize: 12, marginTop: 2 },
+  estimatePanel: {
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 16,
+    gap: 8,
+  },
+  estimateLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 1.6 },
+  estimateNumber: { fontSize: 54, lineHeight: 60, fontWeight: '100' },
+  estimateCopy: { fontSize: 13, lineHeight: 20 },
+  estimateWarning: { fontSize: 12, lineHeight: 18, fontWeight: '700' },
   errorText: { fontSize: 13, textAlign: 'center', marginTop: 8 },
   footer: {
     paddingHorizontal: 24,

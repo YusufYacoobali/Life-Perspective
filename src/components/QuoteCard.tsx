@@ -21,24 +21,17 @@ export function QuoteCard({ quote, style, compact = false }: QuoteCardProps) {
       ]}
     >
       <Text style={[styles.mark, { color: colors.accent }]}>"</Text>
-      <Text
-        style={[
-          compact ? styles.textCompact : styles.text,
-          { color: colors.text },
-        ]}
-      >
+      <Text style={[compact ? styles.textCompact : styles.text, { color: colors.text }]}>
         {quote.text}
       </Text>
-      <Text style={[styles.author, { color: colors.textSecondary }]}>
-        — {quote.author}
-      </Text>
+      <Text style={[styles.author, { color: colors.textSecondary }]}>- {quote.author}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 16,
+    borderRadius: 8,
     borderWidth: 1,
   },
   full: {
@@ -58,7 +51,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '400',
     lineHeight: 26,
-    letterSpacing: -0.1,
+    letterSpacing: 0,
   },
   textCompact: {
     fontSize: 14,
@@ -67,7 +60,7 @@ const styles = StyleSheet.create({
   },
   author: {
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: '700',
     marginTop: 4,
   },
 });

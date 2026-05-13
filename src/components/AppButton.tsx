@@ -61,9 +61,9 @@ export function AppButton({
       : colors.accent;
 
   const sizeStyles = {
-    sm: { paddingVertical: 10, paddingHorizontal: 16, borderRadius: 10 },
-    md: { paddingVertical: 14, paddingHorizontal: 20, borderRadius: 12 },
-    lg: { paddingVertical: 18, paddingHorizontal: 24, borderRadius: 14 },
+    sm: { paddingVertical: 10, paddingHorizontal: 16, borderRadius: 8 },
+    md: { paddingVertical: 14, paddingHorizontal: 20, borderRadius: 8 },
+    lg: { paddingVertical: 18, paddingHorizontal: 24, borderRadius: 8 },
   }[size];
 
   const fontSizes = { sm: 14, md: 16, lg: 17 }[size];
@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   label: {
-    fontWeight: '600',
-    letterSpacing: -0.2,
+    fontWeight: '800',
+    letterSpacing: 0,
   },
 });

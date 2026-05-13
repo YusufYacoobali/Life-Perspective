@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
   percentText: {
     fontSize: 42,
     fontWeight: '200',
-    letterSpacing: -2,
+    letterSpacing: 0,
     lineHeight: 50,
   },
   usedLabel: {

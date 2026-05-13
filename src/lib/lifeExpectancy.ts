@@ -2,6 +2,10 @@ import { UserProfile } from '../types/user';
 import { getCountryByCode } from './countryData';
 
 export function calculateLifeExpectancy(profile: UserProfile): number {
+  if (profile.overrideLifeExpectancyYears) {
+    return Math.min(Math.max(Math.round(profile.overrideLifeExpectancyYears), 40), 150);
+  }
+
   const country = getCountryByCode(profile.countryCode);
   let base = country
     ? profile.gender === 'female'

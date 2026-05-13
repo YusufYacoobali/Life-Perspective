@@ -46,19 +46,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 16,
     paddingHorizontal: 8,
-    borderRadius: 12,
+    borderRadius: 8,
     borderWidth: 1,
   },
   valueLarge: {
     fontSize: 32,
     fontWeight: '200',
-    letterSpacing: -1,
+    letterSpacing: 0,
     lineHeight: 40,
   },
   value: {
     fontSize: 22,
     fontWeight: '300',
-    letterSpacing: -0.5,
+    letterSpacing: 0,
     lineHeight: 28,
   },
   label: {

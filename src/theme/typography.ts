@@ -4,37 +4,37 @@ export const typography: Record<string, TextStyle> = {
   displayLarge: {
     fontSize: 64,
     fontWeight: '200',
-    letterSpacing: -2,
+    letterSpacing: 0,
     lineHeight: 72,
   },
   displayMedium: {
     fontSize: 48,
     fontWeight: '200',
-    letterSpacing: -1.5,
+    letterSpacing: 0,
     lineHeight: 56,
   },
   displaySmall: {
     fontSize: 36,
     fontWeight: '300',
-    letterSpacing: -1,
+    letterSpacing: 0,
     lineHeight: 44,
   },
   headingLarge: {
     fontSize: 28,
     fontWeight: '600',
-    letterSpacing: -0.5,
+    letterSpacing: 0,
     lineHeight: 36,
   },
   headingMedium: {
     fontSize: 22,
     fontWeight: '600',
-    letterSpacing: -0.3,
+    letterSpacing: 0,
     lineHeight: 30,
   },
   headingSmall: {
     fontSize: 18,
     fontWeight: '600',
-    letterSpacing: -0.2,
+    letterSpacing: 0,
     lineHeight: 26,
   },
   bodyLarge: {

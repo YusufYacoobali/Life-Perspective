@@ -75,12 +75,12 @@ export function AppInput({
 
 const styles = StyleSheet.create({
   container: { gap: 6 },
-  label: { fontSize: 13, fontWeight: '500', letterSpacing: 0.3 },
+  label: { fontSize: 12, fontWeight: '800', letterSpacing: 0.8, textTransform: 'uppercase' },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 14,
   },

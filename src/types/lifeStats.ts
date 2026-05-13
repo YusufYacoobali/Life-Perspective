@@ -9,6 +9,7 @@ export interface LifeStats {
   monthsRemaining: number;
   weeksLived: number;
   weeksRemaining: number;
+  totalDaysEstimated: number;
   daysLived: number;
   daysRemaining: number;
   hoursRemaining: number;

@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "Time Left",
+    "name": "Life Perspective",
     "slug": "time-left",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/app-icon.png",
     "scheme": "time-left",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -22,7 +22,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/app-icon.png",
         "backgroundColor": "#111111"
       },
       "edgeToEdgeEnabled": true,
@@ -40,7 +40,7 @@
           "widgets": [
             {
               "name": "ProgressWidget",
-              "label": "Life Progress",
+              "label": "Life Perspective",
               "description": "Shows your life progress percentage",
               "minWidth": "110dp",
               "minHeight": "110dp",
@@ -50,8 +50,26 @@
             {
               "name": "DaysLeftWidget",
               "label": "Days Left",
-              "description": "Shows estimated days remaining",
+              "description": "Shows estimated full days remaining",
               "minWidth": "180dp",
+              "minHeight": "110dp",
+              "updatePeriodMillis": 1800000,
+              "resizeMode": "horizontal|vertical"
+            },
+            {
+              "name": "DotProgressWidget",
+              "label": "Life Left",
+              "description": "Dot progress bar showing life percentage remaining",
+              "minWidth": "180dp",
+              "minHeight": "80dp",
+              "updatePeriodMillis": 1800000,
+              "resizeMode": "horizontal|vertical"
+            },
+            {
+              "name": "ArcWidget",
+              "label": "Life Arc",
+              "description": "Circular arc gauge showing life remaining",
+              "minWidth": "110dp",
               "minHeight": "110dp",
               "updatePeriodMillis": 1800000,
               "resizeMode": "horizontal|vertical"

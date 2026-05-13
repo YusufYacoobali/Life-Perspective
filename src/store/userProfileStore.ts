@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { UserProfile } from '../types/user';
 import { calculateLifeStats } from '../lib/timeCalculations';
 import { LifeStats } from '../types/lifeStats';
+import { clearIOSWidgetData, writeIOSWidgetData } from '../native/iosWidgetBridge';
 
 const PROFILE_KEY = '@time_left_profile';
 const WIDGET_DATA_KEY = '@time_left_widget_data';
@@ -27,9 +28,23 @@ export async function loadProfile(): Promise<UserProfile | null> {
     const raw = await AsyncStorage.getItem(PROFILE_KEY);
     _profile = raw ? JSON.parse(raw) : null;
     notifyListeners();
+    if (_profile) await _syncIfNewDay(_profile);
     return _profile;
   } catch {
     return null;
+  }
+}
+
+async function _syncIfNewDay(profile: UserProfile): Promise<void> {
+  try {
+    const raw = await AsyncStorage.getItem(WIDGET_DATA_KEY);
+    if (!raw) { await syncWidgetData(profile); return; }
+    const stored = JSON.parse(raw) as WidgetData;
+    const lastDate = new Date(stored.updatedAt).toDateString();
+    const today = new Date().toDateString();
+    if (lastDate !== today) await syncWidgetData(profile);
+  } catch {
+    // non-critical
   }
 }
 
@@ -44,6 +59,7 @@ export async function clearProfile(): Promise<void> {
   _profile = null;
   await AsyncStorage.removeItem(PROFILE_KEY);
   await AsyncStorage.removeItem(WIDGET_DATA_KEY);
+  await clearIOSWidgetData();
   notifyListeners();
 }
 
@@ -60,6 +76,7 @@ async function syncWidgetData(profile: UserProfile): Promise<void> {
       updatedAt: new Date().toISOString(),
     };
     await AsyncStorage.setItem(WIDGET_DATA_KEY, JSON.stringify(widgetData));
+    await writeIOSWidgetData(widgetData);
   } catch {
     // non-critical
   }
@@ -68,6 +85,7 @@ async function syncWidgetData(profile: UserProfile): Promise<void> {
 export function useUserProfile() {
   const [profile, setProfile] = useState<UserProfile | null>(_profile);
   const [isLoaded, setIsLoaded] = useState(_profile !== null);
+  const [, setClockTick] = useState(0);
 
   useEffect(() => {
     const update = () => setProfile(_profile);
@@ -84,6 +102,14 @@ export function useUserProfile() {
       _listeners = _listeners.filter((fn) => fn !== update);
     };
   }, [isLoaded]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setClockTick((tick) => tick + 1);
+    }, 60 * 1000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   const save = useCallback(async (p: UserProfile) => {
     await saveProfile(p);

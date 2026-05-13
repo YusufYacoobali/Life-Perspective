@@ -11,6 +11,7 @@ export interface UserProfile {
   weightKg: number | null;
   smokingStatus: SmokingStatus;
   activityLevel: ActivityLevel;
+  overrideLifeExpectancyYears?: number | null;
   createdAt: string;
   updatedAt: string;
 }

@@ -37,7 +37,7 @@ export default function TabsLayout() {
           borderTopColor: colors.tabBarBorder,
           borderTopWidth: 0.5,
           elevation: 0,
-          height: 49 + insets.bottom,
+          height: 54 + insets.bottom,
           paddingBottom: insets.bottom,
         },
         tabBarBackground: Platform.OS === 'ios'
@@ -47,7 +47,7 @@ export default function TabsLayout() {
                 tint={isDark ? 'dark' : 'light'}
                 style={{
                   flex: 1,
-                  backgroundColor: isDark ? 'rgba(7,7,9,0.85)' : 'rgba(245,242,238,0.85)',
+                  backgroundColor: isDark ? 'rgba(7,8,10,0.88)' : 'rgba(247,243,234,0.88)',
                 }}
               />
             )
@@ -66,6 +66,13 @@ export default function TabsLayout() {
         options={{
           title: 'Life',
           tabBarIcon: (props) => <TabIcon name="bar-chart" {...props} />,
+        }}
+      />
+      <Tabs.Screen
+        name="perspective"
+        options={{
+          title: 'Lens',
+          tabBarIcon: (props) => <TabIcon name="aperture" {...props} />,
         }}
       />
       <Tabs.Screen

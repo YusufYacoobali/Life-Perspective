@@ -43,7 +43,7 @@ export function PremiumStatCard({ stats }: PremiumStatCardProps) {
 const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
-    borderRadius: 16,
+    borderRadius: 8,
     borderWidth: 1,
     overflow: 'hidden',
   },
@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
   value: {
     fontSize: 20,
     fontWeight: '200',
-    letterSpacing: -0.5,
+    letterSpacing: 0,
   },
   label: {
     fontSize: 10,

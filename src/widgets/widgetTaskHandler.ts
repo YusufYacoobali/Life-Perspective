@@ -3,6 +3,8 @@ import { WidgetTaskHandlerProps } from 'react-native-android-widget';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ProgressWidget } from './ProgressWidget';
 import { DaysLeftWidget } from './DaysLeftWidget';
+import { DotProgressWidget } from './DotProgressWidget';
+import { ArcWidget } from './ArcWidget';
 
 const WIDGET_DATA_KEY = '@time_left_widget_data';
 
@@ -49,6 +51,24 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
         daysRemaining: data.daysRemaining,
         yearsRemaining: data.yearsRemaining,
         quote: data.dailyQuote,
+      })
+    );
+  }
+
+  if (widgetInfo.widgetName === 'DotProgressWidget') {
+    renderWidget(
+      React.createElement(DotProgressWidget, {
+        percentageLived: data.percentageLived,
+        yearsRemaining: data.yearsRemaining,
+      })
+    );
+  }
+
+  if (widgetInfo.widgetName === 'ArcWidget') {
+    renderWidget(
+      React.createElement(ArcWidget, {
+        percentageLived: data.percentageLived,
+        yearsRemaining: data.yearsRemaining,
       })
     );
   }

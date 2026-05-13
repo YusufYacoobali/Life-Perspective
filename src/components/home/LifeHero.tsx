@@ -59,7 +59,7 @@ export function LifeHero({ stats, unit }: LifeHeroProps) {
         <Text style={[styles.secondaryHighlight, { color: colors.accent }]}>
           {stats.percentageRemaining.toFixed(1)}% still ahead
         </Text>
-        <Text style={[styles.secondarySep, { color: colors.textTertiary }]}> · </Text>
+        <Text style={[styles.secondarySep, { color: colors.textTertiary }]}> / </Text>
         <Text style={[styles.secondaryDim, { color: colors.textTertiary }]}>
           {stats.percentageLived.toFixed(1)}% used
         </Text>
@@ -77,7 +77,7 @@ const styles = StyleSheet.create({
   number: {
     fontSize: 72,
     fontWeight: '100',
-    letterSpacing: -4,
+    letterSpacing: 0,
     lineHeight: 80,
   },
   unitLabel: {

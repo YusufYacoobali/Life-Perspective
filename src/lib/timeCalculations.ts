@@ -10,9 +10,9 @@ export function calculateLifeStats(profile: UserProfile): LifeStats {
   const estimatedDeathDate = new Date(dob);
   estimatedDeathDate.setFullYear(dob.getFullYear() + lifeExpectancyYears);
 
-  const msLived = now.getTime() - dob.getTime();
+  const msLived = Math.max(now.getTime() - dob.getTime(), 0);
   const msRemaining = Math.max(estimatedDeathDate.getTime() - now.getTime(), 0);
-  const msTotal = estimatedDeathDate.getTime() - dob.getTime();
+  const msTotal = Math.max(estimatedDeathDate.getTime() - dob.getTime(), 1);
 
   const percentageLived = Math.min((msLived / msTotal) * 100, 100);
   const percentageRemaining = Math.max(100 - percentageLived, 0);
@@ -28,22 +28,26 @@ export function calculateLifeStats(profile: UserProfile): LifeStats {
   const msPerHour = secondsPerMinute * minutesPerHour * 1000;
   const msPerMinute = secondsPerMinute * 1000;
 
-  const daysLived = msLived / msPerDay;
-  const daysRemaining = msRemaining / msPerDay;
+  const totalDaysEstimated = Math.max(Math.ceil(msTotal / msPerDay), 1);
+  const daysLived = Math.min(Math.floor(msLived / msPerDay), totalDaysEstimated);
+  const daysRemaining = Math.max(totalDaysEstimated - daysLived, 0);
+  const preciseDaysLived = msLived / msPerDay;
+  const preciseDaysRemaining = msRemaining / msPerDay;
 
   return {
     estimatedLifeExpectancyYears: lifeExpectancyYears,
     estimatedDeathDate: estimatedDeathDate.toISOString(),
-    yearsLived: Math.floor(daysLived / daysPerYear),
-    yearsRemaining: Math.floor(daysRemaining / daysPerYear),
+    yearsLived: Math.floor(preciseDaysLived / daysPerYear),
+    yearsRemaining: Math.floor(preciseDaysRemaining / daysPerYear),
     percentageLived: Math.round(percentageLived * 10) / 10,
     percentageRemaining: Math.round(percentageRemaining * 10) / 10,
-    monthsLived: Math.floor(daysLived / daysPerMonth),
-    monthsRemaining: Math.floor(daysRemaining / daysPerMonth),
-    weeksLived: Math.floor(daysLived / daysPerWeek),
-    weeksRemaining: Math.floor(daysRemaining / daysPerWeek),
-    daysLived: Math.floor(daysLived),
-    daysRemaining: Math.floor(daysRemaining),
+    monthsLived: Math.floor(preciseDaysLived / daysPerMonth),
+    monthsRemaining: Math.floor(preciseDaysRemaining / daysPerMonth),
+    weeksLived: Math.floor(preciseDaysLived / daysPerWeek),
+    weeksRemaining: Math.floor(preciseDaysRemaining / daysPerWeek),
+    totalDaysEstimated,
+    daysLived,
+    daysRemaining,
     hoursRemaining: Math.floor(msRemaining / msPerHour),
     minutesRemaining: Math.floor(msRemaining / msPerMinute),
   };

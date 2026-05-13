@@ -36,7 +36,7 @@ export function TodayFocusCard() {
       const saved: StoredFocus = JSON.parse(raw);
       if (saved.date === todayStr()) setFocus(saved.text);
     });
-    Animated.timing(fadeAnim, { toValue: 1, duration: 500, delay: 600, useNativeDriver: true }).start();
+      Animated.timing(fadeAnim, { toValue: 1, duration: 500, delay: 600, useNativeDriver: true }).start();
   }, []);
 
   const startEditing = () => {
@@ -102,7 +102,7 @@ export function TodayFocusCard() {
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 16,
+    borderRadius: 8,
     borderWidth: 1,
     padding: 20,
     gap: 10,
@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '300',
     lineHeight: 24,
-    letterSpacing: -0.2,
+    letterSpacing: 0,
   },
   placeholderText: {
     fontSize: 15,
@@ -131,14 +131,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '300',
     lineHeight: 24,
-    letterSpacing: -0.2,
+    letterSpacing: 0,
     minHeight: 48,
   },
   saveBtn: {
     alignSelf: 'flex-end',
     paddingVertical: 8,
     paddingHorizontal: 20,
-    borderRadius: 10,
+    borderRadius: 8,
   },
   saveBtnText: {
     color: '#fff',
