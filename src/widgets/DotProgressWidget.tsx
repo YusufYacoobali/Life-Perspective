@@ -9,8 +9,8 @@ interface DotProgressWidgetProps {
 const TOTAL_DOTS = 22;
 
 export function DotProgressWidget({ percentageLived, yearsRemaining }: DotProgressWidgetProps) {
-  const pctRemaining = Math.round(100 - percentageLived);
-  const livedDots = Math.round((percentageLived / 100) * TOTAL_DOTS);
+  const pctRemaining = Math.max(0, Math.round(100 - percentageLived));
+  const livedDots = Math.min(TOTAL_DOTS - 1, Math.max(0, Math.round((percentageLived / 100) * TOTAL_DOTS)));
 
   return (
     <FlexWidget
@@ -19,19 +19,20 @@ export function DotProgressWidget({ percentageLived, yearsRemaining }: DotProgre
         width: 'match_parent',
         flexDirection: 'column',
         justifyContent: 'space-between',
-        backgroundColor: '#111318',
-        borderRadius: 20,
-        padding: 16,
+        backgroundColor: '#05080D',
+        borderRadius: 24,
+        borderWidth: 1,
+        borderColor: '#222A35',
+        padding: 18,
       }}
       clickAction="OPEN_APP"
     >
       <FlexWidget style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-        <TextWidget text="Life Left" style={{ fontSize: 15, color: '#C8BEB4' }} />
-        <TextWidget text={`${pctRemaining}%`} style={{ fontSize: 22, color: '#FF8A47', fontWeight: '700' }} />
+        <TextWidget text="Life Left" style={{ fontSize: 16, color: '#CFC6BA' }} />
+        <TextWidget text={`${pctRemaining}%`} style={{ fontSize: 29, color: '#FFC165', fontWeight: '300' }} />
       </FlexWidget>
 
-      {/* Dot row: amber lived dots, thin separator bar, faded remaining dots */}
-      <FlexWidget style={{ flexDirection: 'row', alignItems: 'center' }}>
+      <FlexWidget style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
         {Array.from({ length: TOTAL_DOTS }).map((_, i) => {
           const isSeparator = i === livedDots;
           const isLived = i < livedDots;
@@ -39,11 +40,10 @@ export function DotProgressWidget({ percentageLived, yearsRemaining }: DotProgre
             <FlexWidget
               key={i}
               style={{
-                width: isSeparator ? 2 : 6,
-                height: isSeparator ? 14 : 6,
-                borderRadius: isSeparator ? 1 : 3,
-                marginRight: 4,
-                backgroundColor: isSeparator ? '#C8BEB4' : isLived ? '#FF8A47' : '#252B37',
+                width: isSeparator ? 2 : 5,
+                height: isSeparator ? 18 : isLived ? 8 : 7,
+                borderRadius: isSeparator ? 1 : 4,
+                backgroundColor: isSeparator ? '#E7D8C9' : isLived ? '#FFC165' : '#252B37',
               }}
             />
           );
@@ -52,7 +52,7 @@ export function DotProgressWidget({ percentageLived, yearsRemaining }: DotProgre
 
       <TextWidget
         text={`${yearsRemaining} years left`}
-        style={{ fontSize: 14, color: '#D9D4CA' }}
+        style={{ fontSize: 15, color: '#ECE5D8' }}
       />
     </FlexWidget>
   );

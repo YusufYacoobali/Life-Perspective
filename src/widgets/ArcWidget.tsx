@@ -27,8 +27,25 @@ function buildArcSvg(percentageLived: number): string {
       : '';
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 150" width="150" height="150">
-  <path d="${bgPath}" fill="none" stroke="#1E2430" stroke-width="11" stroke-linecap="round"/>
-  ${amberPath ? `<path d="${amberPath}" fill="none" stroke="#FF8A47" stroke-width="11" stroke-linecap="round"/>` : ''}
+  <defs>
+    <linearGradient id="amber" x1="22" y1="118" x2="118" y2="22" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FF943F"/>
+      <stop offset="0.55" stop-color="#FFC45E"/>
+      <stop offset="1" stop-color="#FF8A47"/>
+    </linearGradient>
+    <linearGradient id="ice" x1="110" y1="12" x2="140" y2="130" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#24313D"/>
+      <stop offset="1" stop-color="#A8E7F4"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3.2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <circle cx="75" cy="75" r="43" fill="none" stroke="#FFFFFF" stroke-opacity="0.08" stroke-width="1"/>
+  <path d="${bgPath}" fill="none" stroke="#1A222E" stroke-width="12" stroke-linecap="round"/>
+  <path d="${bgPath}" fill="none" stroke="url(#ice)" stroke-width="8" stroke-linecap="round" opacity="0.34"/>
+  ${amberPath ? `<path d="${amberPath}" fill="none" stroke="url(#amber)" stroke-width="12" stroke-linecap="round" filter="url(#glow)"/>` : ''}
 </svg>`;
 
   return svg;
@@ -47,8 +64,10 @@ export function ArcWidget({ percentageLived, yearsRemaining }: ArcWidgetProps) {
       style={{
         height: 'match_parent',
         width: 'match_parent',
-        backgroundColor: '#0D0F14',
-        borderRadius: 20,
+        backgroundColor: '#05080D',
+        borderRadius: 24,
+        borderWidth: 1,
+        borderColor: '#222A35',
         alignItems: 'center',
         justifyContent: 'center',
       }}
@@ -67,19 +86,19 @@ export function ArcWidget({ percentageLived, yearsRemaining }: ArcWidgetProps) {
         >
           <TextWidget
             text={`${remaining}%`}
-            style={{ fontSize: 24, color: '#F7F2E8', fontWeight: '200' }}
+            style={{ fontSize: 25, color: '#F7F2E8', fontWeight: '200' }}
           />
           <TextWidget
             text="AHEAD"
-            style={{ fontSize: 8, color: '#8A8A96', fontWeight: '700' }}
+            style={{ fontSize: 8, color: '#9A9AA6', fontWeight: '700' }}
           />
           <TextWidget
             text={`${yearsRemaining}`}
-            style={{ fontSize: 20, color: '#F7F2E8', fontWeight: '200' }}
+            style={{ fontSize: 25, color: '#F7F2E8', fontWeight: '200' }}
           />
           <TextWidget
             text="YEARS LEFT"
-            style={{ fontSize: 8, color: '#FF8A47', fontWeight: '700' }}
+            style={{ fontSize: 8, color: '#FFC165', fontWeight: '700' }}
           />
         </FlexWidget>
       </OverlapWidget>

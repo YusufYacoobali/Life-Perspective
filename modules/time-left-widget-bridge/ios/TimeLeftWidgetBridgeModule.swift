@@ -5,7 +5,7 @@ import WidgetKit
 public class TimeLeftWidgetBridgeModule: Module {
   private let suiteName = "group.com.yacoobali.lifeperspective"
   private let dataKey = "widget_life_data"
-  private let widgetKind = "TimeLeftWidget"
+  private let widgetKinds = ["TimeLeftWidget", "DotProgressWidget", "ArcGaugeWidget"]
 
   public func definition() -> ModuleDefinition {
     Name("TimeLeftWidgetBridge")
@@ -18,7 +18,7 @@ public class TimeLeftWidgetBridgeModule: Module {
 
       defaults.set(data, forKey: self.dataKey)
       defaults.synchronize()
-      WidgetCenter.shared.reloadTimelines(ofKind: self.widgetKind)
+      self.reloadWidgets()
       return true
     }
 
@@ -29,8 +29,14 @@ public class TimeLeftWidgetBridgeModule: Module {
 
       defaults.removeObject(forKey: self.dataKey)
       defaults.synchronize()
-      WidgetCenter.shared.reloadTimelines(ofKind: self.widgetKind)
+      self.reloadWidgets()
       return true
+    }
+  }
+
+  private func reloadWidgets() {
+    for kind in widgetKinds {
+      WidgetCenter.shared.reloadTimelines(ofKind: kind)
     }
   }
 }
