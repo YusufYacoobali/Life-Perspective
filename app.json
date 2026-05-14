@@ -15,9 +15,9 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "yacoobali.lifeperspective",
+      "bundleIdentifier": "com.yacoobali.lifeperspective",
       "entitlements": {
-        "com.apple.security.application-groups": ["group.yacoobali.lifeperspective"]
+        "com.apple.security.application-groups": ["group.com.yacoobali.lifeperspective"]
       }
     },
     "android": {
@@ -26,7 +26,7 @@
         "backgroundColor": "#111111"
       },
       "edgeToEdgeEnabled": true,
-      "package": "yacoobali.lifeperspective"
+      "package": "com.yacoobali.lifeperspective"
     },
     "web": {
       "bundler": "metro",
