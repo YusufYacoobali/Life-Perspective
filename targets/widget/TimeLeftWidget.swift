@@ -19,7 +19,7 @@ struct LifeData: Codable {
 
 func loadLifeData() -> LifeData {
     guard
-        let defaults = UserDefaults(suiteName: "group.com.timeleft.app"),
+        let defaults = UserDefaults(suiteName: "group.yacoobali.lifeperspective"),
         let data = defaults.data(forKey: "widget_life_data"),
         let decoded = try? JSONDecoder().decode(LifeData.self, from: data)
     else {

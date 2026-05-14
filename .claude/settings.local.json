@@ -7,7 +7,8 @@
       "Bash(npx tsc *)",
       "Bash(grep -n \"SvgWidget\\\\|SvgWidgetProps\" node_modules/react-native-android-widget/lib/typescript/widgets/SvgWidget.d.ts)",
       "Bash(cat node_modules/react-native-android-widget/src/widgets/SvgWidget.tsx)",
-      "Bash(grep -v \"ExperimentalWarning\\\\|CommonJS\\\\|ES Module\\\\|require\\(\\)\\\\|Use \\\\`node\")"
+      "Bash(grep -v \"ExperimentalWarning\\\\|CommonJS\\\\|ES Module\\\\|require\\(\\)\\\\|Use \\\\`node\")",
+      "Bash(xargs sed -i 's/yacoobali\\\\.lifeperspective/com.yacoobali.lifeperspective/g')"
     ]
   }
 }

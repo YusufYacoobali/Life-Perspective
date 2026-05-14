@@ -15,9 +15,9 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.timeleft.app",
+      "bundleIdentifier": "yacoobali.lifeperspective",
       "entitlements": {
-        "com.apple.security.application-groups": ["group.com.timeleft.app"]
+        "com.apple.security.application-groups": ["group.yacoobali.lifeperspective"]
       }
     },
     "android": {
@@ -26,7 +26,7 @@
         "backgroundColor": "#111111"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.timeleft.app"
+      "package": "yacoobali.lifeperspective"
     },
     "web": {
       "bundler": "metro",

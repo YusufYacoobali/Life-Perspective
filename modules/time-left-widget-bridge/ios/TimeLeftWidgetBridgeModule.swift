@@ -3,7 +3,7 @@ import Foundation
 import WidgetKit
 
 public class TimeLeftWidgetBridgeModule: Module {
-  private let suiteName = "group.com.timeleft.app"
+  private let suiteName = "group.yacoobali.lifeperspective"
   private let dataKey = "widget_life_data"
   private let widgetKind = "TimeLeftWidget"
 
