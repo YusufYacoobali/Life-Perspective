@@ -37,8 +37,8 @@ export default function TabsLayout() {
           borderTopColor: colors.tabBarBorder,
           borderTopWidth: 0.5,
           elevation: 0,
-          height: 54 + insets.bottom,
-          paddingBottom: insets.bottom,
+          height: 62 + insets.bottom,
+          paddingBottom: insets.bottom + 8,
         },
         tabBarBackground: Platform.OS === 'ios'
           ? () => (
