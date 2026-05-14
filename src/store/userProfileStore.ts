@@ -4,9 +4,18 @@ import { UserProfile } from '../types/user';
 import { calculateLifeStats } from '../lib/timeCalculations';
 import { LifeStats } from '../types/lifeStats';
 import { clearIOSWidgetData, writeIOSWidgetData } from '../native/iosWidgetBridge';
+import { refreshAndroidWidgets } from '../widgets/refreshAndroidWidgets';
 
 const PROFILE_KEY = '@time_left_profile';
 const WIDGET_DATA_KEY = '@time_left_widget_data';
+
+const EMPTY_WIDGET_DATA: WidgetData = {
+  percentageLived: 0,
+  daysRemaining: 0,
+  yearsRemaining: 0,
+  dailyQuote: 'Make today count.',
+  updatedAt: new Date(0).toISOString(),
+};
 
 export interface WidgetData {
   percentageLived: number;
@@ -51,7 +60,7 @@ async function _syncIfNewDay(profile: UserProfile): Promise<void> {
 export async function saveProfile(profile: UserProfile): Promise<void> {
   _profile = { ...profile, updatedAt: new Date().toISOString() };
   await AsyncStorage.setItem(PROFILE_KEY, JSON.stringify(_profile));
-  await syncWidgetData(_profile);
+  await refreshWidgetData(_profile);
   notifyListeners();
 }
 
@@ -60,10 +69,13 @@ export async function clearProfile(): Promise<void> {
   await AsyncStorage.removeItem(PROFILE_KEY);
   await AsyncStorage.removeItem(WIDGET_DATA_KEY);
   await clearIOSWidgetData();
+  await refreshAndroidWidgets(EMPTY_WIDGET_DATA);
   notifyListeners();
 }
 
-async function syncWidgetData(profile: UserProfile): Promise<void> {
+export async function refreshWidgetData(profile = _profile): Promise<void> {
+  if (!profile) return;
+
   try {
     const stats = calculateLifeStats(profile);
     const { getDailyQuote } = await import('../lib/quotes');
@@ -77,9 +89,14 @@ async function syncWidgetData(profile: UserProfile): Promise<void> {
     };
     await AsyncStorage.setItem(WIDGET_DATA_KEY, JSON.stringify(widgetData));
     await writeIOSWidgetData(widgetData);
+    await refreshAndroidWidgets(widgetData);
   } catch {
     // non-critical
   }
+}
+
+async function syncWidgetData(profile: UserProfile): Promise<void> {
+  await refreshWidgetData(profile);
 }
 
 export function useUserProfile() {
@@ -115,11 +132,15 @@ export function useUserProfile() {
     await saveProfile(p);
   }, []);
 
+  const refreshWidgets = useCallback(async () => {
+    await refreshWidgetData(_profile);
+  }, []);
+
   const clear = useCallback(async () => {
     await clearProfile();
   }, []);
 
   const stats: LifeStats | null = profile ? calculateLifeStats(profile) : null;
 
-  return { profile, stats, isLoaded, save, clear };
+  return { profile, stats, isLoaded, save, clear, refreshWidgets };
 }

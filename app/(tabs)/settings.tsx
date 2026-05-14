@@ -69,7 +69,7 @@ function Section({ title, children }: { title?: string; children: React.ReactNod
 
 export default function SettingsScreen() {
   const { colors, isDark, mode, setMode } = useTheme();
-  const { profile, stats, clear } = useUserProfile();
+  const { profile, stats, clear, refreshWidgets } = useUserProfile();
   const { settings, setHapticsEnabled } = useAppSettings();
 
   const gradientColors: [string, string, string] = isDark
@@ -92,6 +92,12 @@ export default function SettingsScreen() {
         },
       ],
     );
+  };
+
+  const handleRefreshWidgets = async () => {
+    hapticLight();
+    await refreshWidgets();
+    Alert.alert('Widgets refreshed', 'Your latest profile estimate has been pushed to the widgets.');
   };
 
   const themeOptions: { label: string; value: ThemeMode; icon: React.ComponentProps<typeof Ionicons>['name'] }[] = [
@@ -187,7 +193,8 @@ export default function SettingsScreen() {
 
           <Section title="WIDGETS">
             <Row icon="phone-portrait-outline" label="Android widgets" value="Enabled in dev build" />
-            <Row icon="logo-apple" label="iOS widgets" value="WidgetKit target" isLast />
+            <Row icon="logo-apple" label="iOS widgets" value="WidgetKit target" />
+            <Row icon="refresh-outline" label="Refresh widgets now" onPress={handleRefreshWidgets} isLast />
           </Section>
 
           <Section title="ABOUT">
