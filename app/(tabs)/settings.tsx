@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import * as StoreReview from 'expo-store-review';
 import { useTheme, ThemeMode } from '../../src/theme';
 import { useUserProfile } from '../../src/store/userProfileStore';
 import { useAppSettings } from '../../src/store/settingsStore';
@@ -92,6 +93,15 @@ export default function SettingsScreen() {
         },
       ],
     );
+  };
+
+  const handleReview = async () => {
+    hapticLight();
+    if (await StoreReview.isAvailableAsync()) {
+      await StoreReview.requestReview();
+    } else {
+      Alert.alert('Review', 'Store review is not available on this device.');
+    }
   };
 
   const handleRefreshWidgets = async () => {
@@ -198,7 +208,8 @@ export default function SettingsScreen() {
           </Section>
 
           <Section title="ABOUT">
-            <Row icon="sparkles-outline" label="Life Perspective" value="v1.0.0" isLast />
+            <Row icon="sparkles-outline" label="Life Perspective" value="v1.0.0" />
+            <Row icon="star-outline" label="Rate & Review" onPress={handleReview} isLast />
           </Section>
 
           <Text style={[styles.disclaimer, { color: colors.textTertiary }]}>

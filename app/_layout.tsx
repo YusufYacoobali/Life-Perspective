@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ThemeProvider, useTheme } from '../src/theme';
 import { loadProfile } from '../src/store/userProfileStore';
+import { trackSessionAndMaybeReview } from '../src/lib/reviewPrompt';
 
 // Register Android widget task handler — wrapped in try/catch so Expo Go on iOS doesn't crash
 if (Platform.OS === 'android') {
@@ -22,6 +23,7 @@ function RootStack() {
 
   useEffect(() => {
     loadProfile();
+    trackSessionAndMaybeReview();
   }, []);
 
   return (
