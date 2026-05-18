@@ -118,6 +118,8 @@ extension View {
 }
 
 struct PremiumWidgetBackground: View {
+    var showStroke = false
+
     var body: some View {
         ZStack {
             LinearGradient(
@@ -127,27 +129,29 @@ struct PremiumWidgetBackground: View {
             )
             RadialGradient(colors: [WidgetPalette.amber.opacity(0.16), .clear], center: .topTrailing, startRadius: 8, endRadius: 170)
             RadialGradient(colors: [WidgetPalette.blue.opacity(0.15), .clear], center: .bottomLeading, startRadius: 8, endRadius: 210)
-            ContainerRelativeShape().stroke(Color.white.opacity(0.08), lineWidth: 1)
+            ContainerRelativeShape().stroke(Color.white.opacity(showStroke ? 0.08 : 0), lineWidth: showStroke ? 1 : 0)
         }
     }
 }
 
 struct ChromeCard<Content: View>: View {
     let padding: CGFloat
+    let showBorder: Bool
     let content: Content
 
-    init(padding: CGFloat = 16, @ViewBuilder content: () -> Content) {
+    init(padding: CGFloat = 16, showBorder: Bool = false, @ViewBuilder content: () -> Content) {
         self.padding = padding
+        self.showBorder = showBorder
         self.content = content()
     }
 
     var body: some View {
         ZStack {
-            PremiumWidgetBackground()
+            PremiumWidgetBackground(showStroke: showBorder)
             content.padding(padding)
         }
         .clipShape(ContainerRelativeShape())
-        .overlay(ContainerRelativeShape().stroke(Color.white.opacity(0.06), lineWidth: 1))
+        .overlay(ContainerRelativeShape().stroke(Color.white.opacity(showBorder ? 0.06 : 0), lineWidth: showBorder ? 1 : 0))
     }
 }
 
@@ -228,9 +232,9 @@ struct LifeLeftGridCard: View {
         let remaining = data.weeksRemaining ?? 1776
         let compact = family == .systemSmall
 
-        ChromeCard(padding: compact ? 12 : 16) {
+        ChromeCard(padding: compact ? 12 : 16, showBorder: true) {
             VStack(alignment: .leading, spacing: compact ? 8 : 12) {
-                Text("Life in Weeks")
+                Text("Life Dots")
                     .font(.system(size: compact ? 13 : 15, weight: .bold))
                     .foregroundColor(WidgetPalette.text)
 
@@ -261,8 +265,8 @@ struct LifeArcShape: Shape {
 
     func path(in rect: CGRect) -> Path {
         var path = Path()
-        let radius = min(rect.width * 0.44, rect.height * 0.88)
-        let center = CGPoint(x: rect.midX, y: rect.maxY * 0.94)
+        let radius = min(rect.width * 0.43, rect.height * 0.9)
+        let center = CGPoint(x: rect.midX, y: rect.maxY * 0.96)
         path.addArc(
             center: center,
             radius: radius,
@@ -280,8 +284,8 @@ struct LifeArcMarker: View {
     var body: some View {
         GeometryReader { proxy in
             let clamped = min(max(progress, 0), 1)
-            let radius = min(proxy.size.width * 0.44, proxy.size.height * 0.88)
-            let center = CGPoint(x: proxy.size.width / 2, y: proxy.size.height * 0.94)
+            let radius = min(proxy.size.width * 0.43, proxy.size.height * 0.9)
+            let center = CGPoint(x: proxy.size.width / 2, y: proxy.size.height * 0.96)
             let angle = (180 + (180 * clamped)) * Double.pi / 180
             let x = center.x + CGFloat(cos(angle)) * radius
             let y = center.y + CGFloat(sin(angle)) * radius
@@ -290,7 +294,7 @@ struct LifeArcMarker: View {
                 .fill(WidgetPalette.green)
                 .overlay(Circle().stroke(WidgetPalette.text.opacity(0.86), lineWidth: 1.4))
                 .shadow(color: WidgetPalette.green.opacity(0.5), radius: 4)
-                .frame(width: 14, height: 14)
+                .frame(width: 12, height: 12)
                 .position(x: x, y: y)
         }
     }
@@ -303,7 +307,7 @@ struct SmoothLifeArc: View {
         let progress = min(max(percentage / 100, 0), 1)
         ZStack {
             LifeArcShape(startDegrees: 180, endDegrees: 360)
-                .stroke(WidgetPalette.track.opacity(0.95), style: StrokeStyle(lineWidth: 10, lineCap: .round))
+                .stroke(WidgetPalette.track.opacity(0.95), style: StrokeStyle(lineWidth: 7, lineCap: .round))
             LifeArcShape(startDegrees: 180, endDegrees: 180 + 180 * progress)
                 .stroke(
                     LinearGradient(
@@ -311,7 +315,7 @@ struct SmoothLifeArc: View {
                         startPoint: .leading,
                         endPoint: .trailing
                     ),
-                    style: StrokeStyle(lineWidth: 10, lineCap: .round)
+                    style: StrokeStyle(lineWidth: 7, lineCap: .round)
                 )
                 .shadow(color: WidgetPalette.green.opacity(0.24), radius: 5)
             LifeArcMarker(progress: progress)
@@ -328,30 +332,29 @@ struct LifeArcCard: View {
         let yearsCompleted = max(0, totalYears - data.yearsRemaining)
         let completed = Int(data.percentageLived.rounded())
 
-        ChromeCard(padding: 13) {
-            VStack(spacing: 8) {
-                ZStack(alignment: .top) {
-                    SmoothLifeArc(percentage: data.percentageLived)
-                        .frame(maxWidth: .infinity)
-                    VStack(spacing: 2) {
-                        Text("AGE")
-                            .font(.system(size: 9, weight: .bold))
-                            .kerning(1.3)
-                            .foregroundColor(WidgetPalette.dim)
-                        Text("\(yearsCompleted)")
-                            .font(.system(size: 38, weight: .light))
-                            .foregroundColor(WidgetPalette.text)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.8)
-                        Text("of \(totalYears) years")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundColor(WidgetPalette.dim)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.78)
-                    }
-                    .padding(.top, 35)
+        ChromeCard(padding: 10) {
+            VStack(spacing: 5) {
+                SmoothLifeArc(percentage: data.percentageLived)
+                    .frame(height: 46)
+                    .padding(.horizontal, 4)
+                    .padding(.top, 2)
+
+                VStack(spacing: 0) {
+                    Text("AGE")
+                        .font(.system(size: 8, weight: .bold))
+                        .kerning(1.2)
+                        .foregroundColor(WidgetPalette.dim)
+                    Text("\(yearsCompleted)")
+                        .font(.system(size: 32, weight: .light))
+                        .foregroundColor(WidgetPalette.text)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                    Text("of \(totalYears) years")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(WidgetPalette.dim)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.78)
                 }
-                .frame(maxHeight: .infinity)
 
                 Rectangle()
                     .fill(WidgetPalette.track.opacity(0.9))
@@ -360,24 +363,24 @@ struct LifeArcCard: View {
                 HStack(spacing: 0) {
                     VStack(spacing: 2) {
                         Text("\(completed)%")
-                            .font(.system(size: 20, weight: .bold))
+                            .font(.system(size: 17, weight: .bold))
                             .foregroundColor(WidgetPalette.green)
                         Text("completed")
-                            .font(.system(size: 9, weight: .medium))
+                            .font(.system(size: 8, weight: .medium))
                             .foregroundColor(WidgetPalette.dim)
                     }
                     .frame(maxWidth: .infinity)
 
                     Rectangle()
                         .fill(WidgetPalette.track.opacity(0.9))
-                        .frame(width: 1, height: 34)
+                        .frame(width: 1, height: 28)
 
                     VStack(spacing: 2) {
                         Text("\(data.yearsRemaining)")
-                            .font(.system(size: 20, weight: .bold))
+                            .font(.system(size: 17, weight: .bold))
                             .foregroundColor(WidgetPalette.green)
                         Text("years left")
-                            .font(.system(size: 9, weight: .medium))
+                            .font(.system(size: 8, weight: .medium))
                             .foregroundColor(WidgetPalette.dim)
                     }
                     .frame(maxWidth: .infinity)
@@ -452,17 +455,15 @@ struct SunGlyph: View {
 
 struct MilestoneCountdownCard: View {
     let entry: SimpleEntry
-    @Environment(\.widgetFamily) var family
 
     var body: some View {
         let milestones = entry.lifeData.milestones ?? LifeData.placeholder.milestones!
-        let compact = family == .systemSmall
-        let visibleCount = compact ? 2 : 3
+        let visibleCount = 3
 
-        ChromeCard(padding: compact ? 12 : 16) {
-            VStack(alignment: .leading, spacing: compact ? 8 : 10) {
+        ChromeCard(padding: 12) {
+            VStack(alignment: .leading, spacing: 5) {
                 Text("Upcoming Milestones")
-                    .font(.system(size: compact ? 14 : 16, weight: .bold))
+                    .font(.system(size: 15, weight: .bold))
                     .foregroundColor(WidgetPalette.text)
                     .lineLimit(1)
 
@@ -471,7 +472,7 @@ struct MilestoneCountdownCard: View {
                     .frame(height: 1)
 
                 ForEach(Array(milestones.prefix(visibleCount).enumerated()), id: \.offset) { index, milestone in
-                    HStack(spacing: compact ? 10 : 14) {
+                    HStack(spacing: 12) {
                         let color = milestoneColor(milestone.tone)
 
                         RoundedRectangle(cornerRadius: 7)
@@ -479,27 +480,27 @@ struct MilestoneCountdownCard: View {
                             .background(RoundedRectangle(cornerRadius: 7).fill(color.opacity(0.08)))
                             .overlay(
                                 Image(systemName: milestoneSymbol(for: milestone.title))
-                                    .font(.system(size: compact ? 15 : 19, weight: .semibold))
+                                    .font(.system(size: 17, weight: .semibold))
                                     .foregroundColor(color)
                             )
-                            .frame(width: compact ? 28 : 34, height: compact ? 28 : 34)
+                            .frame(width: 28, height: 28)
 
                         Text(milestone.title)
-                            .font(.system(size: compact ? 13 : 14, weight: .bold))
+                            .font(.system(size: 14, weight: .bold))
                             .foregroundColor(WidgetPalette.text)
                             .lineLimit(1)
-                            .minimumScaleFactor(0.78)
+                            .minimumScaleFactor(0.72)
 
                         Spacer(minLength: 8)
 
                         VStack(alignment: .trailing, spacing: -1) {
                             Text(milestone.days.formatted())
-                                .font(.system(size: compact ? 16 : 18, weight: .bold))
+                                .font(.system(size: 17, weight: .bold))
                                 .foregroundColor(color)
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.75)
                             Text("days")
-                                .font(.system(size: compact ? 10 : 11, weight: .medium))
+                                .font(.system(size: 10, weight: .medium))
                                 .foregroundColor(WidgetPalette.dim)
                         }
                     }
@@ -542,8 +543,8 @@ struct LifeLeftGridWidget: Widget {
         StaticConfiguration(kind: kind, provider: Provider()) { entry in
             LifeLeftGridWidgetView(entry: entry).widgetHostBackground()
         }
-        .configurationDisplayName("Life Left Grid")
-        .description("Life in weeks with lived, current, and remaining periods.")
+        .configurationDisplayName("Life Dots")
+        .description("Life dots with lived, current, and remaining periods.")
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
     }
 }
@@ -583,7 +584,7 @@ struct MilestoneCountdownWidget: Widget {
         }
         .configurationDisplayName("Milestones")
         .description("Countdowns to meaningful life milestones.")
-        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
+        .supportedFamilies([.systemMedium])
     }
 }
 

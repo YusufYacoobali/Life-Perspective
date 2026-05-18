@@ -38,5 +38,6 @@ public class TimeLeftWidgetBridgeModule: Module {
     for kind in widgetKinds {
       WidgetCenter.shared.reloadTimelines(ofKind: kind)
     }
+    WidgetCenter.shared.reloadAllTimelines()
   }
 }
