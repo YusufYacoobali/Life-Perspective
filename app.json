@@ -21,8 +21,9 @@
       }
     },
     "android": {
+      "icon": "./assets/android_icon.png",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/app-icon.png",
+        "foregroundImage": "./assets/android_icon.png",
         "backgroundColor": "#111111"
       },
       "edgeToEdgeEnabled": true,
@@ -39,38 +40,38 @@
         {
           "widgets": [
             {
-              "name": "ProgressWidget",
-              "label": "Life Perspective",
-              "description": "Shows your life progress percentage",
-              "minWidth": "110dp",
-              "minHeight": "110dp",
+              "name": "LifeLeftGridWidget",
+              "label": "Life Left Grid",
+              "description": "Weeks lived and weeks remaining.",
+              "minWidth": "250dp",
+              "minHeight": "140dp",
               "updatePeriodMillis": 1800000,
               "resizeMode": "horizontal|vertical"
             },
             {
-              "name": "DaysLeftWidget",
-              "label": "Days Left",
-              "description": "Shows estimated full days remaining",
-              "minWidth": "180dp",
-              "minHeight": "110dp",
-              "updatePeriodMillis": 1800000,
-              "resizeMode": "horizontal|vertical"
-            },
-            {
-              "name": "DotProgressWidget",
-              "label": "Life Left",
-              "description": "Dot progress bar showing life percentage remaining",
-              "minWidth": "180dp",
-              "minHeight": "80dp",
-              "updatePeriodMillis": 1800000,
-              "resizeMode": "horizontal|vertical"
-            },
-            {
-              "name": "ArcWidget",
+              "name": "LifeArcWidget",
               "label": "Life Arc",
-              "description": "Circular arc gauge showing life remaining",
-              "minWidth": "110dp",
-              "minHeight": "110dp",
+              "description": "Age progress through estimated life.",
+              "minWidth": "120dp",
+              "minHeight": "120dp",
+              "updatePeriodMillis": 1800000,
+              "resizeMode": "none"
+            },
+            {
+              "name": "TodayLeftWidget",
+              "label": "Today Left",
+              "description": "Time left before midnight.",
+              "minWidth": "115dp",
+              "minHeight": "90dp",
+              "updatePeriodMillis": 60000,
+              "resizeMode": "horizontal|vertical"
+            },
+            {
+              "name": "MilestoneCountdownWidget",
+              "label": "Milestones",
+              "description": "Countdowns to birthdays and big life dates.",
+              "minWidth": "220dp",
+              "minHeight": "125dp",
               "updatePeriodMillis": 1800000,
               "resizeMode": "horizontal|vertical"
             }

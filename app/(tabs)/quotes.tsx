@@ -1,15 +1,44 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Share } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../../src/theme';
 import { QUOTES, Quote, getDailyQuote } from '../../src/lib/quotes';
+
+const SAVED_QUOTES_KEY = '@life_perspective_saved_quotes';
+
+type QuoteListItem = {
+  quote: Quote;
+  originalIndex: number;
+};
 
 export default function QuotesScreen() {
   const { colors, isDark } = useTheme();
   const [saved, setSaved] = useState<Set<number>>(new Set());
   const dailyIndex = QUOTES.indexOf(getDailyQuote());
+
+  useEffect(() => {
+    AsyncStorage.getItem(SAVED_QUOTES_KEY)
+      .then((raw) => {
+        if (!raw) return;
+        const indexes = JSON.parse(raw) as number[];
+        setSaved(new Set(indexes.filter((index) => Number.isInteger(index))));
+      })
+      .catch(() => {
+        // Saved quotes are a convenience; ignore storage misses.
+      });
+  }, []);
+
+  const quoteItems = useMemo<QuoteListItem[]>(() => {
+    return QUOTES.map((quote, originalIndex) => ({ quote, originalIndex })).sort((a, b) => {
+      const aSaved = saved.has(a.originalIndex);
+      const bSaved = saved.has(b.originalIndex);
+      if (aSaved !== bSaved) return aSaved ? -1 : 1;
+      return a.originalIndex - b.originalIndex;
+    });
+  }, [saved]);
 
   const gradientColors: [string, string, string] = isDark
     ? ['#07080A', '#15100E', '#07080A']
@@ -24,13 +53,17 @@ export default function QuotesScreen() {
       const next = new Set(prev);
       if (next.has(i)) next.delete(i);
       else next.add(i);
+      AsyncStorage.setItem(SAVED_QUOTES_KEY, JSON.stringify(Array.from(next))).catch(() => {
+        // Non-critical; the current session still updates immediately.
+      });
       return next;
     });
   };
 
-  const renderItem = ({ item, index }: { item: Quote; index: number }) => {
-    const isDaily = index === dailyIndex;
-    const isSaved = saved.has(index);
+  const renderItem = ({ item }: { item: QuoteListItem }) => {
+    const { quote, originalIndex } = item;
+    const isDaily = originalIndex === dailyIndex;
+    const isSaved = saved.has(originalIndex);
     return (
       <View
         style={[
@@ -40,10 +73,10 @@ export default function QuotesScreen() {
       >
         <View style={styles.cardTop}>
           <Text style={[styles.badge, { color: isDaily ? colors.accentWarm : colors.textTertiary }]}>
-            {isDaily ? 'TODAY' : `#${String(index + 1).padStart(2, '0')}`}
+            {isSaved ? 'PINNED' : isDaily ? 'TODAY' : `#${String(originalIndex + 1).padStart(2, '0')}`}
           </Text>
           <View style={styles.actions}>
-            <TouchableOpacity onPress={() => toggleSave(index)} hitSlop={8}>
+            <TouchableOpacity onPress={() => toggleSave(originalIndex)} hitSlop={8}>
               <Ionicons
                 name={isSaved ? 'heart' : 'heart-outline'}
                 size={18}
@@ -51,15 +84,15 @@ export default function QuotesScreen() {
               />
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => Share.share({ message: `"${item.text}" - ${item.author}` })}
+              onPress={() => Share.share({ message: `"${quote.text}" - ${quote.author}` })}
               hitSlop={8}
             >
               <Ionicons name="share-outline" size={18} color={colors.textTertiary} />
             </TouchableOpacity>
           </View>
         </View>
-        <Text style={[styles.quoteText, { color: colors.text }]}>{item.text}</Text>
-        <Text style={[styles.author, { color: colors.textSecondary }]}>{item.author}</Text>
+        <Text style={[styles.quoteText, { color: colors.text }]}>{quote.text}</Text>
+        <Text style={[styles.author, { color: colors.textSecondary }]}>{quote.author}</Text>
       </View>
     );
   };
@@ -68,8 +101,8 @@ export default function QuotesScreen() {
     <LinearGradient colors={gradientColors} style={styles.root}>
       <SafeAreaView style={styles.safe} edges={['top']}>
         <FlatList
-          data={QUOTES}
-          keyExtractor={(_, i) => String(i)}
+          data={quoteItems}
+          keyExtractor={(item) => String(item.originalIndex)}
           renderItem={renderItem}
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}

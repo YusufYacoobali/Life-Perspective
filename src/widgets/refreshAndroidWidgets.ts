@@ -1,48 +1,33 @@
 import React from 'react';
 import { Platform } from 'react-native';
 import { requestWidgetUpdate } from 'react-native-android-widget';
-import { ProgressWidget } from './ProgressWidget';
-import { DaysLeftWidget } from './DaysLeftWidget';
-import { DotProgressWidget } from './DotProgressWidget';
-import { ArcWidget } from './ArcWidget';
+import { LifeLeftGridWidget } from './LifeLeftGridWidget';
+import { LifeArcWidget } from './LifeArcWidget';
+import { TodayLeftWidget } from './TodayLeftWidget';
+import { MilestoneCountdownWidget } from './MilestoneCountdownWidget';
+import { WidgetData } from './widgetData';
 
-export interface AndroidWidgetData {
-  percentageLived: number;
-  daysRemaining: number;
-  yearsRemaining: number;
-  dailyQuote: string;
-}
+const WIDGET_NAMES = [
+  'LifeLeftGridWidget',
+  'LifeArcWidget',
+  'TodayLeftWidget',
+  'MilestoneCountdownWidget',
+] as const;
 
-const WIDGET_NAMES = ['ProgressWidget', 'DaysLeftWidget', 'DotProgressWidget', 'ArcWidget'] as const;
-
-function renderWidget(widgetName: (typeof WIDGET_NAMES)[number], data: AndroidWidgetData) {
+function renderWidget(widgetName: (typeof WIDGET_NAMES)[number], data: WidgetData) {
   switch (widgetName) {
-    case 'ProgressWidget':
-      return React.createElement(ProgressWidget, {
-        percentageLived: data.percentageLived,
-        daysRemaining: data.daysRemaining,
-        quote: data.dailyQuote,
-      });
-    case 'DaysLeftWidget':
-      return React.createElement(DaysLeftWidget, {
-        daysRemaining: data.daysRemaining,
-        yearsRemaining: data.yearsRemaining,
-        quote: data.dailyQuote,
-      });
-    case 'DotProgressWidget':
-      return React.createElement(DotProgressWidget, {
-        percentageLived: data.percentageLived,
-        yearsRemaining: data.yearsRemaining,
-      });
-    case 'ArcWidget':
-      return React.createElement(ArcWidget, {
-        percentageLived: data.percentageLived,
-        yearsRemaining: data.yearsRemaining,
-      });
+    case 'LifeLeftGridWidget':
+      return React.createElement(LifeLeftGridWidget, { data });
+    case 'LifeArcWidget':
+      return React.createElement(LifeArcWidget, { data });
+    case 'TodayLeftWidget':
+      return React.createElement(TodayLeftWidget, { data });
+    case 'MilestoneCountdownWidget':
+      return React.createElement(MilestoneCountdownWidget, { data });
   }
 }
 
-export async function refreshAndroidWidgets(data: AndroidWidgetData): Promise<void> {
+export async function refreshAndroidWidgets(data: WidgetData): Promise<void> {
   if (Platform.OS !== 'android') return;
 
   await Promise.all(

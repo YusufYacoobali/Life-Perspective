@@ -205,6 +205,12 @@ export default function SettingsScreen() {
             <Row icon="phone-portrait-outline" label="Android widgets" value="Enabled in dev build" />
             <Row icon="logo-apple" label="iOS widgets" value="WidgetKit target" />
             <Row icon="refresh-outline" label="Refresh widgets now" onPress={handleRefreshWidgets} isLast />
+            <View style={[styles.helperBox, { borderTopColor: colors.border }]}>
+              <Text style={[styles.helperText, { color: colors.textTertiary }]}>
+                Life in Weeks compresses your estimated lifetime into a small grid. Filled dots are lived time,
+                the ring is your current block, and dim dots are the weeks still ahead.
+              </Text>
+            </View>
           </Section>
 
           <Section title="ABOUT">
@@ -247,6 +253,12 @@ const styles = StyleSheet.create({
   rowLeft: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
   rowLabel: { fontSize: 15, fontWeight: '400' },
   rowValue: { fontSize: 12, textAlign: 'right' },
+  helperBox: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+  },
+  helperText: { fontSize: 12, lineHeight: 17 },
   editButton: {
     borderWidth: 1,
     borderRadius: 8,

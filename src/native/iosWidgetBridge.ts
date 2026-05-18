@@ -1,12 +1,8 @@
 import { Platform } from 'react-native';
 import { requireNativeModule } from 'expo-modules-core';
+import { WidgetData } from '../widgets/widgetData';
 
-export interface IOSWidgetPayload {
-  percentageLived: number;
-  daysRemaining: number;
-  yearsRemaining: number;
-  dailyQuote: string;
-}
+export type IOSWidgetPayload = WidgetData;
 
 interface TimeLeftWidgetBridgeModule {
   setWidgetData(json: string): Promise<boolean>;

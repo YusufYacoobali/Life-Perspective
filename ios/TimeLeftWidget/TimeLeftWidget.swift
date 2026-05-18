@@ -1,18 +1,53 @@
 import WidgetKit
 import SwiftUI
+import Foundation
+
+struct WidgetMilestone: Codable, Identifiable {
+    var id: String { "\(title)-\(days)" }
+    var title: String
+    var subtitle: String
+    var days: Int
+    var tone: String
+}
 
 struct LifeData: Codable {
     var percentageLived: Double
+    var percentageRemaining: Double?
     var daysRemaining: Int
     var yearsRemaining: Int
+    var weeksLived: Int?
+    var weeksRemaining: Int?
+    var totalWeeksEstimated: Int?
+    var monthsLived: Int?
+    var monthsRemaining: Int?
+    var todayMinutesRemaining: Int?
+    var todayElapsedPercentage: Double?
+    var todayTimeLeftLabel: String?
     var dailyQuote: String
+    var milestones: [WidgetMilestone]?
+    var updatedAt: String?
 
     static var placeholder: LifeData {
         LifeData(
             percentageLived: 31.0,
+            percentageRemaining: 69.0,
             daysRemaining: 18998,
             yearsRemaining: 52,
-            dailyQuote: "Make today count."
+            weeksLived: 2384,
+            weeksRemaining: 1776,
+            totalWeeksEstimated: 4160,
+            monthsLived: 548,
+            monthsRemaining: 624,
+            todayMinutesRemaining: 462,
+            todayElapsedPercentage: 67.9,
+            todayTimeLeftLabel: "7h 42m",
+            dailyQuote: "Do not waste what you cannot get back.",
+            milestones: [
+                WidgetMilestone(title: "Next Birthday", subtitle: "47 Sundays", days: 47, tone: "pink"),
+                WidgetMilestone(title: "New Year", subtitle: "231 days", days: 231, tone: "green"),
+                WidgetMilestone(title: "Age 30", subtitle: "842 days", days: 842, tone: "blue")
+            ],
+            updatedAt: nil
         )
     }
 }
@@ -38,9 +73,14 @@ struct Provider: TimelineProvider {
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<SimpleEntry>) -> Void) {
-        let entry = SimpleEntry(date: Date(), lifeData: loadLifeData())
-        let nextUpdate = Calendar.current.date(byAdding: .minute, value: 30, to: Date())!
-        completion(Timeline(entries: [entry], policy: .after(nextUpdate)))
+        let now = Date()
+        let data = loadLifeData()
+        let entries = (0..<60).compactMap { minuteOffset in
+            Calendar.current.date(byAdding: .minute, value: minuteOffset, to: now).map {
+                SimpleEntry(date: $0, lifeData: data)
+            }
+        }
+        completion(Timeline(entries: entries, policy: .atEnd))
     }
 }
 
@@ -50,318 +90,509 @@ struct SimpleEntry: TimelineEntry {
 }
 
 struct WidgetPalette {
-    static let bg = Color(red: 0.027, green: 0.031, blue: 0.039)
-    static let panel = Color.white.opacity(0.06)
-    static let text = Color(red: 0.969, green: 0.949, blue: 0.91)
-    static let dim = Color(red: 0.655, green: 0.627, blue: 0.627)
-    static let faint = Color(red: 0.369, green: 0.376, blue: 0.408)
-    static let teal = Color(red: 0.333, green: 0.78, blue: 0.757)
-    static let amber = Color(red: 1.0, green: 0.541, blue: 0.278)
-    static let track = Color(red: 0.125, green: 0.141, blue: 0.173)
+    static let bgTop = Color(red: 0.018, green: 0.023, blue: 0.031)
+    static let bgMid = Color(red: 0.019, green: 0.042, blue: 0.052)
+    static let bgBottom = Color(red: 0.055, green: 0.066, blue: 0.082)
+    static let text = Color(red: 0.97, green: 0.95, blue: 0.91)
+    static let dim = Color(red: 0.72, green: 0.68, blue: 0.63)
+    static let faint = Color(red: 0.36, green: 0.39, blue: 0.45)
+    static let track = Color(red: 0.11, green: 0.14, blue: 0.19)
+    static let amber = Color(red: 1.0, green: 0.57, blue: 0.23)
+    static let gold = Color(red: 1.0, green: 0.77, blue: 0.38)
+    static let blue = Color(red: 0.55, green: 0.83, blue: 0.93)
+    static let green = Color(red: 0.55, green: 0.9, blue: 0.55)
+    static let pink = Color(red: 1.0, green: 0.36, blue: 0.58)
 }
 
-// MARK: - Shared sub-views
-
-struct ProgressBar: View {
-    let percentage: Double
-
-    var body: some View {
-        GeometryReader { geo in
-            ZStack(alignment: .leading) {
-                Capsule().fill(WidgetPalette.track)
-                Capsule()
-                    .fill(WidgetPalette.teal)
-                    .frame(width: max(4, geo.size.width * min(max(percentage, 0), 100) / 100))
+extension View {
+    @ViewBuilder
+    func widgetHostBackground() -> some View {
+        if #available(iOSApplicationExtension 17.0, *) {
+            self.containerBackground(for: .widget) {
+                PremiumWidgetBackground()
             }
-        }
-        .frame(height: 5)
-    }
-}
-
-struct DotStrip: View {
-    var body: some View {
-        HStack(spacing: 4) {
-            ForEach(0..<9) { index in
-                Circle()
-                    .fill(index < 5 ? WidgetPalette.faint : index == 5 ? WidgetPalette.amber : WidgetPalette.track)
-                    .frame(width: 7, height: 7)
-            }
+        } else {
+            self.background(PremiumWidgetBackground())
         }
     }
 }
 
-// MARK: - Original widgets (small + medium)
-
-struct SmallWidgetView: View {
-    let entry: SimpleEntry
-
+struct PremiumWidgetBackground: View {
     var body: some View {
         ZStack {
             LinearGradient(
-                colors: [WidgetPalette.bg, Color(red: 0.055, green: 0.09, blue: 0.095)],
+                colors: [WidgetPalette.bgTop, WidgetPalette.bgMid, WidgetPalette.bgBottom],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text("LIFE PERSPECTIVE")
-                        .font(.system(size: 9, weight: .bold))
-                        .foregroundColor(WidgetPalette.amber)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.65)
-                    Spacer()
-                    Text("\(Int(entry.lifeData.percentageLived))%")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(WidgetPalette.text)
-                }
-                Spacer()
-                Text("\(entry.lifeData.daysRemaining.formatted())")
-                    .font(.system(size: 34, weight: .ultraLight))
-                    .minimumScaleFactor(0.6)
-                    .lineLimit(1)
-                    .foregroundColor(WidgetPalette.text)
-                Text("full days left")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundColor(WidgetPalette.dim)
-                ProgressBar(percentage: entry.lifeData.percentageLived)
-                DotStrip()
-            }
-            .padding(14)
+            RadialGradient(colors: [WidgetPalette.amber.opacity(0.16), .clear], center: .topTrailing, startRadius: 8, endRadius: 170)
+            RadialGradient(colors: [WidgetPalette.blue.opacity(0.15), .clear], center: .bottomLeading, startRadius: 8, endRadius: 210)
+            ContainerRelativeShape().stroke(Color.white.opacity(0.08), lineWidth: 1)
         }
     }
 }
 
-struct MediumWidgetView: View {
-    let entry: SimpleEntry
+struct ChromeCard<Content: View>: View {
+    let padding: CGFloat
+    let content: Content
+
+    init(padding: CGFloat = 16, @ViewBuilder content: () -> Content) {
+        self.padding = padding
+        self.content = content()
+    }
 
     var body: some View {
         ZStack {
-            LinearGradient(
-                colors: [WidgetPalette.bg, Color(red: 0.07, green: 0.055, blue: 0.047)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            HStack(spacing: 12) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("LIFE PROGRESS")
-                        .font(.system(size: 9, weight: .bold))
-                        .foregroundColor(WidgetPalette.amber)
-                    Text("\(Int(entry.lifeData.percentageLived))%")
-                        .font(.system(size: 46, weight: .ultraLight))
-                        .foregroundColor(WidgetPalette.text)
-                    Text("of the estimate used")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundColor(WidgetPalette.dim)
-                    ProgressBar(percentage: entry.lifeData.percentageLived)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("\(entry.lifeData.daysRemaining.formatted())")
-                        .font(.system(size: 28, weight: .ultraLight))
-                        .minimumScaleFactor(0.65)
-                        .lineLimit(1)
-                        .foregroundColor(WidgetPalette.text)
-                    Text("days left")
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundColor(WidgetPalette.teal)
-                    Spacer()
-                    DotStrip()
-                    Text("\"\(entry.lifeData.dailyQuote.prefix(62))\"")
-                        .font(.system(size: 10, weight: .regular))
-                        .foregroundColor(WidgetPalette.faint)
-                        .lineLimit(2)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(12)
-                .background(WidgetPalette.panel)
-                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-            }
-            .padding(15)
+            PremiumWidgetBackground()
+            content.padding(padding)
         }
+        .clipShape(ContainerRelativeShape())
+        .overlay(ContainerRelativeShape().stroke(Color.white.opacity(0.06), lineWidth: 1))
     }
 }
 
-struct TimeLeftWidgetEntryView: View {
-    var entry: Provider.Entry
+func todayCountdown(from date: Date) -> (label: String, elapsed: Double) {
+    let calendar = Calendar.current
+    let midnight = calendar.nextDate(after: date, matching: DateComponents(hour: 0, minute: 0), matchingPolicy: .nextTime)!
+    let minutesRemaining = max(0, Int(ceil(midnight.timeIntervalSince(date) / 60)))
+    let hours = minutesRemaining / 60
+    let minutes = minutesRemaining % 60
+    let elapsed = min(max(Double((24 * 60) - minutesRemaining) / Double(24 * 60) * 100, 0), 100)
+    return ("\(hours)h \(String(format: "%02d", minutes))m", elapsed)
+}
+
+func milestoneColor(_ tone: String) -> Color {
+    switch tone {
+    case "pink": return WidgetPalette.pink
+    case "blue": return Color(red: 0.48, green: 0.58, blue: 0.85)
+    case "green": return WidgetPalette.green
+    default: return WidgetPalette.amber
+    }
+}
+
+func milestoneSymbol(for title: String) -> String {
+    let lower = title.lowercased()
+    if lower.contains("birthday") { return "gift" }
+    if lower.contains("year") { return "sun.max" }
+    if lower.contains("retire") { return "briefcase" }
+    if lower.contains("age") { return "calendar" }
+    return "sparkles"
+}
+
+struct WeekGrid: View {
+    let data: LifeData
     @Environment(\.widgetFamily) var family
 
     var body: some View {
-        switch family {
-        case .systemSmall:
-            SmallWidgetView(entry: entry)
-        case .systemMedium:
-            MediumWidgetView(entry: entry)
-        default:
-            SmallWidgetView(entry: entry)
-        }
-    }
-}
+        let cols = family == .systemSmall ? 14 : 32
+        let rows = family == .systemSmall ? 7 : 8
+        let totalDots = cols * rows
+        let totalWeeks = max(data.totalWeeksEstimated ?? (data.weeksLived ?? 0) + (data.weeksRemaining ?? 0), 1)
+        let livedWeeks = data.weeksLived ?? Int(Double(totalWeeks) * data.percentageLived / 100)
+        let livedDots = min(totalDots - 1, max(0, Int(Double(livedWeeks) / Double(totalWeeks) * Double(totalDots))))
 
-struct TimeLeftWidget: Widget {
-    let kind: String = "TimeLeftWidget"
+        GeometryReader { proxy in
+            let cellW = proxy.size.width / CGFloat(cols)
+            let cellH = proxy.size.height / CGFloat(rows)
+            let radius = min(cellW, cellH) * 0.28
 
-    var body: some WidgetConfiguration {
-        StaticConfiguration(kind: kind, provider: Provider()) { entry in
-            TimeLeftWidgetEntryView(entry: entry)
-                .containerBackground(.clear, for: .widget)
-        }
-        .configurationDisplayName("Life Perspective")
-        .description("See your estimated life perspective at a glance.")
-        .supportedFamilies([.systemSmall, .systemMedium])
-    }
-}
+            ForEach(0..<totalDots, id: \.self) { index in
+                let col = index % cols
+                let row = index / cols
+                let x = CGFloat(col) * cellW + cellW / 2
+                let y = CGFloat(row) * cellH + cellH / 2
 
-// MARK: - Dot Progress widget (Pic 1: "Life Left" with dot row)
+                Circle()
+                    .fill(index < livedDots ? WidgetPalette.text.opacity(0.96) : WidgetPalette.faint.opacity(0.52))
+                    .frame(width: radius * 2, height: radius * 2)
+                    .position(x: x, y: y)
 
-private struct LifeLeftDotRow: View {
-    let percentageLived: Double
-    private let totalDots = 22
-
-    var body: some View {
-        let livedDots = Int((percentageLived / 100.0) * Double(totalDots))
-        HStack(spacing: 3) {
-            ForEach(0..<totalDots, id: \.self) { i in
-                if i == livedDots {
-                    Rectangle()
-                        .fill(Color(red: 0.86, green: 0.82, blue: 0.78))
-                        .frame(width: 1.5, height: 13)
-                } else {
+                if index == livedDots {
                     Circle()
-                        .fill(i < livedDots ? WidgetPalette.amber : WidgetPalette.faint)
-                        .frame(width: 5, height: 5)
-                        .opacity(i < livedDots ? 1.0 : 0.48)
+                        .stroke(WidgetPalette.text, lineWidth: 1.45)
+                        .frame(width: radius * 3.1, height: radius * 3.1)
+                        .position(x: x, y: y)
                 }
             }
         }
     }
 }
 
-struct DotProgressWidgetView: View {
+struct LifeLeftGridCard: View {
     let entry: SimpleEntry
+    @Environment(\.widgetFamily) var family
 
     var body: some View {
-        let pct = entry.lifeData.percentageLived
-        let remaining = max(0, 100 - Int(pct.rounded()))
-        ZStack {
-            Color(red: 0.067, green: 0.075, blue: 0.094)
-            VStack(alignment: .leading, spacing: 0) {
-                HStack {
-                    Text("Life Left")
-                        .font(.system(size: 15, weight: .regular))
-                        .foregroundColor(WidgetPalette.dim)
-                    Spacer()
-                    Text("\(remaining)%")
-                        .font(.system(size: 22, weight: .bold))
-                        .foregroundColor(WidgetPalette.amber)
-                }
-                Spacer()
-                LifeLeftDotRow(percentageLived: pct)
-                Spacer()
-                Text("\(entry.lifeData.yearsRemaining) years left")
-                    .font(.system(size: 14, weight: .regular))
+        let data = entry.lifeData
+        let lived = data.weeksLived ?? 2384
+        let remaining = data.weeksRemaining ?? 1776
+        let compact = family == .systemSmall
+
+        ChromeCard(padding: compact ? 12 : 16) {
+            VStack(alignment: .leading, spacing: compact ? 8 : 12) {
+                Text("Life in Weeks")
+                    .font(.system(size: compact ? 13 : 15, weight: .bold))
                     .foregroundColor(WidgetPalette.text)
+
+                WeekGrid(data: data)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                HStack(alignment: .lastTextBaseline) {
+                    Text("\(lived.formatted()) weeks lived")
+                        .font(.system(size: compact ? 9 : 11, weight: .semibold))
+                        .foregroundColor(WidgetPalette.dim)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.75)
+                    Spacer(minLength: 8)
+                    Text("\(remaining.formatted()) remaining")
+                        .font(.system(size: compact ? 9 : 11, weight: .semibold))
+                        .foregroundColor(WidgetPalette.dim)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.75)
+                }
             }
-            .padding(16)
         }
     }
 }
 
-struct DotProgressWidget: Widget {
-    let kind: String = "DotProgressWidget"
+struct LifeArcShape: Shape {
+    let startDegrees: Double
+    let endDegrees: Double
 
-    var body: some WidgetConfiguration {
-        StaticConfiguration(kind: kind, provider: Provider()) { entry in
-            DotProgressWidgetView(entry: entry)
-                .containerBackground(.clear, for: .widget)
-        }
-        .configurationDisplayName("Life Left")
-        .description("Dot progress bar showing life percentage remaining.")
-        .supportedFamilies([.systemMedium])
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        let radius = min(rect.width * 0.44, rect.height * 0.88)
+        let center = CGPoint(x: rect.midX, y: rect.maxY * 0.94)
+        path.addArc(
+            center: center,
+            radius: radius,
+            startAngle: .degrees(startDegrees),
+            endAngle: .degrees(endDegrees),
+            clockwise: false
+        )
+        return path
     }
 }
 
-// MARK: - Arc Gauge widget (Pic 2: circular arc with % + years)
-
-struct ArcGaugeWidgetView: View {
-    let entry: SimpleEntry
+struct LifeArcMarker: View {
+    let progress: Double
 
     var body: some View {
-        let pct = entry.lifeData.percentageLived
-        let remaining = 100.0 - pct
-        let remainingStr = String(format: "%.1f", remaining)
+        GeometryReader { proxy in
+            let clamped = min(max(progress, 0), 1)
+            let radius = min(proxy.size.width * 0.44, proxy.size.height * 0.88)
+            let center = CGPoint(x: proxy.size.width / 2, y: proxy.size.height * 0.94)
+            let angle = (180 + (180 * clamped)) * Double.pi / 180
+            let x = center.x + CGFloat(cos(angle)) * radius
+            let y = center.y + CGFloat(sin(angle)) * radius
 
+            Circle()
+                .fill(WidgetPalette.green)
+                .overlay(Circle().stroke(WidgetPalette.text.opacity(0.86), lineWidth: 1.4))
+                .shadow(color: WidgetPalette.green.opacity(0.5), radius: 4)
+                .frame(width: 14, height: 14)
+                .position(x: x, y: y)
+        }
+    }
+}
+
+struct SmoothLifeArc: View {
+    let percentage: Double
+
+    var body: some View {
+        let progress = min(max(percentage / 100, 0), 1)
         ZStack {
-            Color(red: 0.053, green: 0.059, blue: 0.075)
-
-            // Background arc — full 270°, gap at bottom
-            Circle()
-                .trim(from: 0, to: 0.75)
-                .stroke(WidgetPalette.track, style: StrokeStyle(lineWidth: 13, lineCap: .round))
-                .rotationEffect(.degrees(135))
-                .padding(18)
-
-            // Amber arc — proportional to remaining %
-            Circle()
-                .trim(from: 0, to: CGFloat(remaining / 100.0) * 0.75)
+            LifeArcShape(startDegrees: 180, endDegrees: 360)
+                .stroke(WidgetPalette.track.opacity(0.95), style: StrokeStyle(lineWidth: 10, lineCap: .round))
+            LifeArcShape(startDegrees: 180, endDegrees: 180 + 180 * progress)
                 .stroke(
                     LinearGradient(
-                        colors: [
-                            Color(red: 1.0, green: 0.54, blue: 0.28),
-                            Color(red: 1.0, green: 0.72, blue: 0.18),
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
+                        colors: [WidgetPalette.green, Color(red: 0.72, green: 0.92, blue: 0.75)],
+                        startPoint: .leading,
+                        endPoint: .trailing
                     ),
-                    style: StrokeStyle(lineWidth: 13, lineCap: .round)
+                    style: StrokeStyle(lineWidth: 10, lineCap: .round)
                 )
-                .rotationEffect(.degrees(135))
-                .padding(18)
+                .shadow(color: WidgetPalette.green.opacity(0.24), radius: 5)
+            LifeArcMarker(progress: progress)
+        }
+    }
+}
 
-            VStack(spacing: 1) {
-                Text("\(remainingStr)%")
-                    .font(.system(size: 26, weight: .ultraLight))
-                    .foregroundColor(WidgetPalette.text)
-                Text("AHEAD")
-                    .font(.system(size: 8, weight: .bold))
-                    .foregroundColor(WidgetPalette.dim)
-                    .kerning(1.8)
+struct LifeArcCard: View {
+    let entry: SimpleEntry
 
-                Spacer().frame(height: 6)
+    var body: some View {
+        let data = entry.lifeData
+        let totalYears = max(1, Int(round(Double(data.yearsRemaining) / max((data.percentageRemaining ?? (100 - data.percentageLived)) / 100, 0.01))))
+        let yearsCompleted = max(0, totalYears - data.yearsRemaining)
+        let completed = Int(data.percentageLived.rounded())
 
-                Text("\(entry.lifeData.yearsRemaining)")
-                    .font(.system(size: 24, weight: .ultraLight))
-                    .foregroundColor(WidgetPalette.text)
-                Text("YEARS LEFT")
-                    .font(.system(size: 8, weight: .bold))
-                    .foregroundColor(WidgetPalette.amber)
-                    .kerning(1.5)
+        ChromeCard(padding: 13) {
+            VStack(spacing: 8) {
+                ZStack(alignment: .top) {
+                    SmoothLifeArc(percentage: data.percentageLived)
+                        .frame(maxWidth: .infinity)
+                    VStack(spacing: 2) {
+                        Text("AGE")
+                            .font(.system(size: 9, weight: .bold))
+                            .kerning(1.3)
+                            .foregroundColor(WidgetPalette.dim)
+                        Text("\(yearsCompleted)")
+                            .font(.system(size: 38, weight: .light))
+                            .foregroundColor(WidgetPalette.text)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                        Text("of \(totalYears) years")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(WidgetPalette.dim)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.78)
+                    }
+                    .padding(.top, 35)
+                }
+                .frame(maxHeight: .infinity)
+
+                Rectangle()
+                    .fill(WidgetPalette.track.opacity(0.9))
+                    .frame(height: 1)
+
+                HStack(spacing: 0) {
+                    VStack(spacing: 2) {
+                        Text("\(completed)%")
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundColor(WidgetPalette.green)
+                        Text("completed")
+                            .font(.system(size: 9, weight: .medium))
+                            .foregroundColor(WidgetPalette.dim)
+                    }
+                    .frame(maxWidth: .infinity)
+
+                    Rectangle()
+                        .fill(WidgetPalette.track.opacity(0.9))
+                        .frame(width: 1, height: 34)
+
+                    VStack(spacing: 2) {
+                        Text("\(data.yearsRemaining)")
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundColor(WidgetPalette.green)
+                        Text("years left")
+                            .font(.system(size: 9, weight: .medium))
+                            .foregroundColor(WidgetPalette.dim)
+                    }
+                    .frame(maxWidth: .infinity)
+                }
             }
         }
     }
 }
 
-struct ArcGaugeWidget: Widget {
-    let kind: String = "ArcGaugeWidget"
+struct TodayLeftCard: View {
+    let entry: SimpleEntry
+    @Environment(\.widgetFamily) var family
+
+    var body: some View {
+        let today = todayCountdown(from: entry.date)
+        let compact = family == .systemSmall
+        let quote = entry.lifeData.dailyQuote
+
+        ChromeCard(padding: compact ? 14 : 18) {
+            VStack(alignment: .center, spacing: compact ? 9 : 13) {
+                Text(today.label)
+                    .font(.system(size: compact ? 31 : 39, weight: .bold))
+                    .foregroundColor(WidgetPalette.amber)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.72)
+
+                Text("left until midnight")
+                    .font(.system(size: compact ? 13 : 16, weight: .medium))
+                    .foregroundColor(WidgetPalette.text)
+
+                GeometryReader { proxy in
+                    ZStack(alignment: .leading) {
+                        Capsule().fill(WidgetPalette.track)
+                        Capsule()
+                            .fill(LinearGradient(colors: [WidgetPalette.amber, WidgetPalette.gold], startPoint: .leading, endPoint: .trailing))
+                            .frame(width: max(6, proxy.size.width * today.elapsed / 100))
+                            .shadow(color: WidgetPalette.amber.opacity(0.5), radius: 6)
+                    }
+                }
+                .frame(height: 3)
+                .padding(.bottom, compact ? 2 : 5)
+
+                SunGlyph()
+                    .frame(width: compact ? 22 : 28, height: compact ? 22 : 28)
+
+                Text(quote)
+                    .font(.system(size: compact ? 11 : 13, weight: .regular))
+                    .italic()
+                    .foregroundColor(WidgetPalette.dim)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+            }
+        }
+    }
+}
+
+struct SunGlyph: View {
+    var body: some View {
+        ZStack {
+            Circle().stroke(WidgetPalette.amber, lineWidth: 2)
+            ForEach(0..<8, id: \.self) { index in
+                Capsule()
+                    .fill(WidgetPalette.amber)
+                    .frame(width: 2, height: 6)
+                    .offset(y: -18)
+                    .rotationEffect(.degrees(Double(index) * 45))
+            }
+        }
+    }
+}
+
+struct MilestoneCountdownCard: View {
+    let entry: SimpleEntry
+    @Environment(\.widgetFamily) var family
+
+    var body: some View {
+        let milestones = entry.lifeData.milestones ?? LifeData.placeholder.milestones!
+        let compact = family == .systemSmall
+        let visibleCount = compact ? 2 : 3
+
+        ChromeCard(padding: compact ? 12 : 16) {
+            VStack(alignment: .leading, spacing: compact ? 8 : 10) {
+                Text("Upcoming Milestones")
+                    .font(.system(size: compact ? 14 : 16, weight: .bold))
+                    .foregroundColor(WidgetPalette.text)
+                    .lineLimit(1)
+
+                Rectangle()
+                    .fill(WidgetPalette.track)
+                    .frame(height: 1)
+
+                ForEach(Array(milestones.prefix(visibleCount).enumerated()), id: \.offset) { index, milestone in
+                    HStack(spacing: compact ? 10 : 14) {
+                        let color = milestoneColor(milestone.tone)
+
+                        RoundedRectangle(cornerRadius: 7)
+                            .stroke(color, lineWidth: 1.5)
+                            .background(RoundedRectangle(cornerRadius: 7).fill(color.opacity(0.08)))
+                            .overlay(
+                                Image(systemName: milestoneSymbol(for: milestone.title))
+                                    .font(.system(size: compact ? 15 : 19, weight: .semibold))
+                                    .foregroundColor(color)
+                            )
+                            .frame(width: compact ? 28 : 34, height: compact ? 28 : 34)
+
+                        Text(milestone.title)
+                            .font(.system(size: compact ? 13 : 14, weight: .bold))
+                            .foregroundColor(WidgetPalette.text)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.78)
+
+                        Spacer(minLength: 8)
+
+                        VStack(alignment: .trailing, spacing: -1) {
+                            Text(milestone.days.formatted())
+                                .font(.system(size: compact ? 16 : 18, weight: .bold))
+                                .foregroundColor(color)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.75)
+                            Text("days")
+                                .font(.system(size: compact ? 10 : 11, weight: .medium))
+                                .foregroundColor(WidgetPalette.dim)
+                        }
+                    }
+
+                    if index < min(milestones.count, visibleCount) - 1 {
+                        Rectangle()
+                            .fill(WidgetPalette.track.opacity(0.82))
+                            .frame(height: 1)
+                    }
+                }
+            }
+        }
+    }
+}
+
+struct LifeLeftGridWidgetView: View {
+    var entry: Provider.Entry
+    var body: some View { LifeLeftGridCard(entry: entry) }
+}
+
+struct LifeArcWidgetView: View {
+    var entry: Provider.Entry
+    var body: some View { LifeArcCard(entry: entry) }
+}
+
+struct TodayLeftWidgetView: View {
+    var entry: Provider.Entry
+    var body: some View { TodayLeftCard(entry: entry) }
+}
+
+struct MilestoneCountdownWidgetView: View {
+    var entry: Provider.Entry
+    var body: some View { MilestoneCountdownCard(entry: entry) }
+}
+
+struct LifeLeftGridWidget: Widget {
+    let kind = "LifeLeftGridWidget"
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: Provider()) { entry in
-            ArcGaugeWidgetView(entry: entry)
-                .containerBackground(.clear, for: .widget)
+            LifeLeftGridWidgetView(entry: entry).widgetHostBackground()
+        }
+        .configurationDisplayName("Life Left Grid")
+        .description("Life in weeks with lived, current, and remaining periods.")
+        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
+    }
+}
+
+struct LifeArcWidget: Widget {
+    let kind = "LifeArcWidget"
+
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind, provider: Provider()) { entry in
+            LifeArcWidgetView(entry: entry).widgetHostBackground()
         }
         .configurationDisplayName("Life Arc")
-        .description("Circular arc gauge showing estimated life remaining.")
+        .description("Age progress and years remaining.")
         .supportedFamilies([.systemSmall])
     }
 }
 
-// MARK: - Widget Bundle (entry point for all widgets)
+struct TodayLeftWidget: Widget {
+    let kind = "TodayLeftWidget"
+
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind, provider: Provider()) { entry in
+            TodayLeftWidgetView(entry: entry).widgetHostBackground()
+        }
+        .configurationDisplayName("Today Left")
+        .description("Countdown to midnight with a daily prompt.")
+        .supportedFamilies([.systemSmall, .systemMedium])
+    }
+}
+
+struct MilestoneCountdownWidget: Widget {
+    let kind = "MilestoneCountdownWidget"
+
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind, provider: Provider()) { entry in
+            MilestoneCountdownWidgetView(entry: entry).widgetHostBackground()
+        }
+        .configurationDisplayName("Milestones")
+        .description("Countdowns to meaningful life milestones.")
+        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
+    }
+}
 
 @main
-struct TimeLeftWidgets: WidgetBundle {
+struct LifePerspectiveWidgets: WidgetBundle {
     var body: some Widget {
-        TimeLeftWidget()
-        DotProgressWidget()
-        ArcGaugeWidget()
+        LifeLeftGridWidget()
+        LifeArcWidget()
+        TodayLeftWidget()
+        MilestoneCountdownWidget()
     }
 }

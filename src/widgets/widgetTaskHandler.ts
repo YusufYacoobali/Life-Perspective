@@ -1,33 +1,20 @@
 import React from 'react';
 import { WidgetTaskHandlerProps } from 'react-native-android-widget';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ProgressWidget } from './ProgressWidget';
-import { DaysLeftWidget } from './DaysLeftWidget';
-import { DotProgressWidget } from './DotProgressWidget';
-import { ArcWidget } from './ArcWidget';
+import { LifeLeftGridWidget } from './LifeLeftGridWidget';
+import { LifeArcWidget } from './LifeArcWidget';
+import { TodayLeftWidget } from './TodayLeftWidget';
+import { MilestoneCountdownWidget } from './MilestoneCountdownWidget';
+import { DEFAULT_WIDGET_DATA, WidgetData } from './widgetData';
 
 const WIDGET_DATA_KEY = '@time_left_widget_data';
-
-interface WidgetData {
-  percentageLived: number;
-  daysRemaining: number;
-  yearsRemaining: number;
-  dailyQuote: string;
-}
-
-const DEFAULT_DATA: WidgetData = {
-  percentageLived: 0,
-  daysRemaining: 0,
-  yearsRemaining: 0,
-  dailyQuote: 'Make today count.',
-};
 
 async function getWidgetData(): Promise<WidgetData> {
   try {
     const raw = await AsyncStorage.getItem(WIDGET_DATA_KEY);
-    return raw ? JSON.parse(raw) : DEFAULT_DATA;
+    return raw ? { ...DEFAULT_WIDGET_DATA, ...JSON.parse(raw) } : DEFAULT_WIDGET_DATA;
   } catch {
-    return DEFAULT_DATA;
+    return DEFAULT_WIDGET_DATA;
   }
 }
 
@@ -35,41 +22,19 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
   const { renderWidget, widgetInfo } = props;
   const data = await getWidgetData();
 
-  if (widgetInfo.widgetName === 'ProgressWidget') {
-    renderWidget(
-      React.createElement(ProgressWidget, {
-        percentageLived: data.percentageLived,
-        daysRemaining: data.daysRemaining,
-        quote: data.dailyQuote,
-      })
-    );
+  if (widgetInfo.widgetName === 'LifeLeftGridWidget') {
+    renderWidget(React.createElement(LifeLeftGridWidget, { data }));
   }
 
-  if (widgetInfo.widgetName === 'DaysLeftWidget') {
-    renderWidget(
-      React.createElement(DaysLeftWidget, {
-        daysRemaining: data.daysRemaining,
-        yearsRemaining: data.yearsRemaining,
-        quote: data.dailyQuote,
-      })
-    );
+  if (widgetInfo.widgetName === 'LifeArcWidget') {
+    renderWidget(React.createElement(LifeArcWidget, { data }));
   }
 
-  if (widgetInfo.widgetName === 'DotProgressWidget') {
-    renderWidget(
-      React.createElement(DotProgressWidget, {
-        percentageLived: data.percentageLived,
-        yearsRemaining: data.yearsRemaining,
-      })
-    );
+  if (widgetInfo.widgetName === 'TodayLeftWidget') {
+    renderWidget(React.createElement(TodayLeftWidget, { data }));
   }
 
-  if (widgetInfo.widgetName === 'ArcWidget') {
-    renderWidget(
-      React.createElement(ArcWidget, {
-        percentageLived: data.percentageLived,
-        yearsRemaining: data.yearsRemaining,
-      })
-    );
+  if (widgetInfo.widgetName === 'MilestoneCountdownWidget') {
+    renderWidget(React.createElement(MilestoneCountdownWidget, { data }));
   }
 }

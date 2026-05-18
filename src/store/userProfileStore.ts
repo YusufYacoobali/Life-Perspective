@@ -5,25 +5,10 @@ import { calculateLifeStats } from '../lib/timeCalculations';
 import { LifeStats } from '../types/lifeStats';
 import { clearIOSWidgetData, writeIOSWidgetData } from '../native/iosWidgetBridge';
 import { refreshAndroidWidgets } from '../widgets/refreshAndroidWidgets';
+import { buildWidgetData, DEFAULT_WIDGET_DATA, WidgetData } from '../widgets/widgetData';
 
 const PROFILE_KEY = '@time_left_profile';
 const WIDGET_DATA_KEY = '@time_left_widget_data';
-
-const EMPTY_WIDGET_DATA: WidgetData = {
-  percentageLived: 0,
-  daysRemaining: 0,
-  yearsRemaining: 0,
-  dailyQuote: 'Make today count.',
-  updatedAt: new Date(0).toISOString(),
-};
-
-export interface WidgetData {
-  percentageLived: number;
-  daysRemaining: number;
-  yearsRemaining: number;
-  dailyQuote: string;
-  updatedAt: string;
-}
 
 let _profile: UserProfile | null = null;
 let _listeners: Array<() => void> = [];
@@ -69,7 +54,7 @@ export async function clearProfile(): Promise<void> {
   await AsyncStorage.removeItem(PROFILE_KEY);
   await AsyncStorage.removeItem(WIDGET_DATA_KEY);
   await clearIOSWidgetData();
-  await refreshAndroidWidgets(EMPTY_WIDGET_DATA);
+  await refreshAndroidWidgets(DEFAULT_WIDGET_DATA);
   notifyListeners();
 }
 
@@ -80,13 +65,7 @@ export async function refreshWidgetData(profile = _profile): Promise<void> {
     const stats = calculateLifeStats(profile);
     const { getDailyQuote } = await import('../lib/quotes');
     const quote = getDailyQuote();
-    const widgetData: WidgetData = {
-      percentageLived: stats.percentageLived,
-      daysRemaining: stats.daysRemaining,
-      yearsRemaining: stats.yearsRemaining,
-      dailyQuote: quote.text,
-      updatedAt: new Date().toISOString(),
-    };
+    const widgetData = buildWidgetData(profile, stats, quote.text);
     await AsyncStorage.setItem(WIDGET_DATA_KEY, JSON.stringify(widgetData));
     await writeIOSWidgetData(widgetData);
     await refreshAndroidWidgets(widgetData);
