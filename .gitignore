@@ -37,5 +37,11 @@ yarn-error.*
 *.tsbuildinfo
 
 # generated native folders
-/ios
+/ios/*
+!/ios/LifePerspective/
+!/ios/LifePerspective/LifePerspective.entitlements
+!/ios/TimeLeftWidget/
+!/ios/TimeLeftWidget/TimeLeftWidget.entitlements
+!/ios/LifePerspective.xcodeproj/
+!/ios/LifePerspective.xcodeproj/project.pbxproj
 /android
