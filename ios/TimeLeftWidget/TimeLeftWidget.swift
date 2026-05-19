@@ -273,8 +273,8 @@ struct LifeArcShape: Shape {
     func path(in rect: CGRect) -> Path {
         var path = Path()
         // Half-circle arc that fills available width; center sits at bottom of frame
-        let radius = min(rect.width * 0.5 - 4, rect.height * 0.95)
-        let center = CGPoint(x: rect.midX, y: rect.maxY)
+        let radius = min(rect.width * 0.5 - 4, rect.height * 1.08)
+        let center = CGPoint(x: rect.midX, y: rect.maxY + 4)
         path.addArc(
             center: center,
             radius: radius,
@@ -292,8 +292,8 @@ struct LifeArcMarker: View {
     var body: some View {
         GeometryReader { proxy in
             let clamped = min(max(progress, 0), 1)
-            let radius = min(proxy.size.width * 0.5 - 4, proxy.size.height * 0.95)
-            let center = CGPoint(x: proxy.size.width / 2, y: proxy.size.height)
+            let radius = min(proxy.size.width * 0.5 - 4, proxy.size.height * 1.08)
+            let center = CGPoint(x: proxy.size.width / 2, y: proxy.size.height + 4)
             let angle = (180 + (180 * clamped)) * Double.pi / 180
             let x = center.x + CGFloat(cos(angle)) * radius
             let y = center.y + CGFloat(sin(angle)) * radius
@@ -364,7 +364,7 @@ struct LifeArcCard: View {
                         .lineLimit(1)
                         .minimumScaleFactor(0.78)
                 }
-                .offset(y: -8)
+                .offset(y: -14)
 
                 Rectangle()
                     .fill(WidgetPalette.track.opacity(0.9))
