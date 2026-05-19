@@ -341,11 +341,12 @@ struct LifeArcCard: View {
         let completed = Int(data.percentageLived.rounded())
 
         ChromeCard(padding: 8) {
-            VStack(spacing: 4) {
+            VStack(spacing: 1) {
                 // Arc takes the upper portion, sitting flush
                 SmoothLifeArc(percentage: data.percentageLived)
                     .frame(maxWidth: .infinity)
-                    .frame(height: 58)
+                    .frame(height: 54)
+                    .padding(.top, 5)
 
                 VStack(spacing: -2) {
                     Text("AGE")
@@ -363,11 +364,12 @@ struct LifeArcCard: View {
                         .lineLimit(1)
                         .minimumScaleFactor(0.78)
                 }
+                .offset(y: -3)
 
                 Rectangle()
                     .fill(WidgetPalette.track.opacity(0.9))
                     .frame(height: 1)
-                    .padding(.top, 2)
+                    .padding(.top, -1)
 
                 HStack(spacing: 0) {
                     VStack(spacing: 1) {
@@ -408,8 +410,8 @@ struct TodayLeftCard: View {
         let compact = family == .systemSmall
         let quote = entry.lifeData.dailyQuote
 
-        ChromeCard(padding: compact ? 14 : 18) {
-            VStack(alignment: .center, spacing: compact ? 9 : 13) {
+        ChromeCard(padding: compact ? 13 : 18) {
+            VStack(alignment: .center, spacing: compact ? 8 : 13) {
                 Text(today.label)
                     .font(.system(size: compact ? 31 : 39, weight: .bold))
                     .foregroundColor(WidgetPalette.amber)
@@ -417,8 +419,10 @@ struct TodayLeftCard: View {
                     .minimumScaleFactor(0.72)
 
                 Text("left until midnight")
-                    .font(.system(size: compact ? 13 : 16, weight: .medium))
+                    .font(.system(size: compact ? 12 : 16, weight: .medium))
                     .foregroundColor(WidgetPalette.text)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.72)
 
                 GeometryReader { proxy in
                     ZStack(alignment: .leading) {
@@ -433,7 +437,7 @@ struct TodayLeftCard: View {
                 .padding(.bottom, compact ? 2 : 5)
 
                 SunGlyph()
-                    .frame(width: compact ? 22 : 28, height: compact ? 22 : 28)
+                    .frame(width: compact ? 20 : 27, height: compact ? 20 : 27)
 
                 Text(quote)
                     .font(.system(size: compact ? 11 : 13, weight: .regular))
@@ -442,6 +446,7 @@ struct TodayLeftCard: View {
                     .multilineTextAlignment(.center)
                     .lineLimit(1)
                     .truncationMode(.tail)
+                    .padding(.top, compact ? 3 : 2)
             }
         }
     }
@@ -472,7 +477,8 @@ struct MilestoneCountdownCard: View {
         let visibleCount = 3
         let visible = Array(milestones.prefix(visibleCount))
 
-        ChromeCard(padding: 14) {
+        ZStack {
+            PremiumWidgetBackground()
             VStack(alignment: .leading, spacing: 6) {
                 Text("Upcoming Milestones")
                     .font(.system(size: 14, weight: .bold))
@@ -524,6 +530,8 @@ struct MilestoneCountdownCard: View {
                     }
                 }
             }
+            .padding(14)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 }
