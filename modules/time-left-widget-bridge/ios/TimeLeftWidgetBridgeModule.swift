@@ -5,7 +5,15 @@ import WidgetKit
 public class TimeLeftWidgetBridgeModule: Module {
   private let suiteName = "group.com.yacoobali.lifeperspective"
   private let dataKey = "widget_life_data"
-  private let widgetKinds = ["LifeLeftGridWidget", "LifeArcWidget", "TodayLeftWidget", "MilestoneCountdownWidget"]
+  private let widgetKinds = [
+    "LifeLeftGridWidget",
+    "LifeArcWidget",
+    "TodayLeftWidget",
+    "MilestoneCountdownWidget",
+    "LifeArcWidgetV2",
+    "TodayLeftWidgetV2",
+    "MilestoneCountdownWidgetV2"
+  ]
 
   public func definition() -> ModuleDefinition {
     Name("TimeLeftWidgetBridge")

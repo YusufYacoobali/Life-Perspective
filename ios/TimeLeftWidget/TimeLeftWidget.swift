@@ -570,7 +570,7 @@ struct LifeLeftGridWidget: Widget {
 }
 
 struct LifeArcWidget: Widget {
-    let kind = "LifeArcWidget"
+    let kind = "LifeArcWidgetV2"
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: Provider()) { entry in
@@ -583,7 +583,7 @@ struct LifeArcWidget: Widget {
 }
 
 struct TodayLeftWidget: Widget {
-    let kind = "TodayLeftWidget"
+    let kind = "TodayLeftWidgetV2"
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: Provider()) { entry in
@@ -596,7 +596,7 @@ struct TodayLeftWidget: Widget {
 }
 
 struct MilestoneCountdownWidget: Widget {
-    let kind = "MilestoneCountdownWidget"
+    let kind = "MilestoneCountdownWidgetV2"
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: Provider()) { entry in

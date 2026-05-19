@@ -41,6 +41,7 @@ yarn-error.*
 !/ios/LifePerspective/
 !/ios/LifePerspective/LifePerspective.entitlements
 !/ios/TimeLeftWidget/
+!/ios/TimeLeftWidget/TimeLeftWidget.swift
 !/ios/TimeLeftWidget/TimeLeftWidget.entitlements
 !/ios/LifePerspective.xcodeproj/
 !/ios/LifePerspective.xcodeproj/project.pbxproj
