@@ -136,20 +136,29 @@ struct PremiumWidgetBackground: View {
 
 struct ChromeCard<Content: View>: View {
     let padding: CGFloat
+    let showBorder: Bool
     let content: Content
 
     init(padding: CGFloat = 16, showBorder: Bool = false, @ViewBuilder content: () -> Content) {
         self.padding = padding
+        self.showBorder = showBorder
         self.content = content()
     }
 
-    // Flat wrapper: just padding + fill. The widget host applies the background
-    // via `containerBackground(for: .widget)` so we don't need our own clip/stroke
-    // here (which previously caused a visible inner border inset from the widget).
+    @ViewBuilder
     var body: some View {
-        content
-            .padding(padding)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        if showBorder {
+            ZStack {
+                PremiumWidgetBackground(showStroke: true)
+                content.padding(padding)
+            }
+            .clipShape(ContainerRelativeShape())
+            .overlay(ContainerRelativeShape().stroke(Color.white.opacity(0.06), lineWidth: 1))
+        } else {
+            content
+                .padding(padding)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
     }
 }
 
