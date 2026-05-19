@@ -345,12 +345,12 @@ struct LifeArcCard: View {
                 // Arc takes the upper portion, sitting flush
                 SmoothLifeArc(percentage: data.percentageLived)
                     .frame(maxWidth: .infinity)
-                    .frame(height: 54)
-                    .padding(.top, 5)
-
+                    .frame(height: 46)
+                    .padding(.top, 12)
+                    .padding(.bottom, -2)
                 VStack(spacing: -2) {
                     Text("AGE")
-                        .font(.system(size: 8, weight: .bold))
+                        .font(.system(size: 9, weight: .bold))
                         .kerning(1.4)
                         .foregroundColor(WidgetPalette.dim)
                     Text("\(yearsCompleted)")
@@ -364,12 +364,12 @@ struct LifeArcCard: View {
                         .lineLimit(1)
                         .minimumScaleFactor(0.78)
                 }
-                .offset(y: -3)
+                .offset(y: -8)
 
                 Rectangle()
                     .fill(WidgetPalette.track.opacity(0.9))
                     .frame(height: 1)
-                    .padding(.top, -1)
+                    .padding(.top, -2)
 
                 HStack(spacing: 0) {
                     VStack(spacing: 1) {
@@ -410,8 +410,8 @@ struct TodayLeftCard: View {
         let compact = family == .systemSmall
         let quote = entry.lifeData.dailyQuote
 
-        ChromeCard(padding: compact ? 13 : 18) {
-            VStack(alignment: .center, spacing: compact ? 8 : 13) {
+        ChromeCard(padding: 18) {
+            VStack(alignment: .center, spacing: 13) {
                 Text(today.label)
                     .font(.system(size: compact ? 31 : 39, weight: .bold))
                     .foregroundColor(WidgetPalette.amber)
@@ -434,10 +434,10 @@ struct TodayLeftCard: View {
                     }
                 }
                 .frame(height: 3)
-                .padding(.bottom, compact ? 2 : 5)
+                .padding(.bottom, 5)
 
                 SunGlyph()
-                    .frame(width: compact ? 20 : 27, height: compact ? 20 : 27)
+                    .frame(width: 27, height: 27)
 
                 Text(quote)
                     .font(.system(size: compact ? 11 : 13, weight: .regular))
@@ -446,7 +446,7 @@ struct TodayLeftCard: View {
                     .multilineTextAlignment(.center)
                     .lineLimit(1)
                     .truncationMode(.tail)
-                    .padding(.top, compact ? 3 : 2)
+                    .padding(.top, 2)
             }
         }
     }
@@ -477,8 +477,7 @@ struct MilestoneCountdownCard: View {
         let visibleCount = 3
         let visible = Array(milestones.prefix(visibleCount))
 
-        ZStack {
-            PremiumWidgetBackground()
+        ChromeCard(padding: 14) {
             VStack(alignment: .leading, spacing: 6) {
                 Text("Upcoming Milestones")
                     .font(.system(size: 14, weight: .bold))
@@ -530,7 +529,6 @@ struct MilestoneCountdownCard: View {
                     }
                 }
             }
-            .padding(14)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
