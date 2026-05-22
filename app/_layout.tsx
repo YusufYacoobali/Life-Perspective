@@ -1,21 +1,16 @@
 import { useEffect } from 'react';
-import { Platform } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ThemeProvider, useTheme } from '../src/theme';
 import { loadProfile } from '../src/store/userProfileStore';
 import { trackSessionAndMaybeReview } from '../src/lib/reviewPrompt';
+import { registerNativeWidgetTaskHandler } from '../src/widgets/registerWidgetTaskHandler';
 
-// Register Android widget task handler — wrapped in try/catch so Expo Go on iOS doesn't crash
-if (Platform.OS === 'android') {
-  try {
-    const { registerWidgetTaskHandler } = require('react-native-android-widget');
-    const { widgetTaskHandler } = require('../src/widgets/widgetTaskHandler');
-    registerWidgetTaskHandler(widgetTaskHandler);
-  } catch {
-    // Native module not available (e.g. Expo Go). Widgets require a dev build.
-  }
+try {
+  registerNativeWidgetTaskHandler();
+} catch {
+  // Native widgets require a dev/release build.
 }
 
 function RootStack() {

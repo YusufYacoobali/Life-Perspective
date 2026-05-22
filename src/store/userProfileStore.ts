@@ -3,9 +3,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { UserProfile } from '../types/user';
 import { calculateLifeStats } from '../lib/timeCalculations';
 import { LifeStats } from '../types/lifeStats';
-import { clearIOSWidgetData, writeIOSWidgetData } from '../native/iosWidgetBridge';
-import { refreshAndroidWidgets } from '../widgets/refreshAndroidWidgets';
-import { buildWidgetData, DEFAULT_WIDGET_DATA, WidgetData } from '../widgets/widgetData';
+import { clearPlatformWidgets, refreshPlatformWidgets } from '../widgets/platformWidgetSync';
+import { buildWidgetData, WidgetData } from '../widgets/widgetData';
 
 const PROFILE_KEY = '@time_left_profile';
 const WIDGET_DATA_KEY = '@time_left_widget_data';
@@ -53,8 +52,7 @@ export async function clearProfile(): Promise<void> {
   _profile = null;
   await AsyncStorage.removeItem(PROFILE_KEY);
   await AsyncStorage.removeItem(WIDGET_DATA_KEY);
-  await clearIOSWidgetData();
-  await refreshAndroidWidgets(DEFAULT_WIDGET_DATA);
+  await clearPlatformWidgets();
   notifyListeners();
 }
 
@@ -67,8 +65,7 @@ export async function refreshWidgetData(profile = _profile): Promise<void> {
     const quote = getDailyQuote();
     const widgetData = buildWidgetData(profile, stats, quote.text);
     await AsyncStorage.setItem(WIDGET_DATA_KEY, JSON.stringify(widgetData));
-    await writeIOSWidgetData(widgetData);
-    await refreshAndroidWidgets(widgetData);
+    await refreshPlatformWidgets(widgetData);
   } catch {
     // non-critical
   }

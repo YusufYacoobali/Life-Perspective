@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert, Switch } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert, Switch, Linking, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,6 +9,7 @@ import { useTheme, ThemeMode } from '../../src/theme';
 import { useUserProfile } from '../../src/store/userProfileStore';
 import { useAppSettings } from '../../src/store/settingsStore';
 import { hapticLight } from '../../src/lib/haptics';
+import { LIFE_EXPECTANCY_DISCLAIMER, LIFE_EXPECTANCY_SOURCES } from '../../src/lib/countryData';
 
 function Row({
   icon,
@@ -65,6 +66,42 @@ function Section({ title, children }: { title?: string; children: React.ReactNod
         {children}
       </View>
     </View>
+  );
+}
+
+function CitationLink({
+  name,
+  url,
+  isLast,
+}: {
+  name: string;
+  url: string;
+  isLast?: boolean;
+}) {
+  const { colors } = useTheme();
+
+  const openSource = async () => {
+    hapticLight();
+    await Linking.openURL(url);
+  };
+
+  return (
+    <TouchableOpacity
+      onPress={openSource}
+      activeOpacity={0.65}
+      style={[
+        styles.citationRow,
+        !isLast && { borderBottomColor: colors.border, borderBottomWidth: StyleSheet.hairlineWidth },
+      ]}
+    >
+      <View style={styles.citationTextWrap}>
+        <Text style={[styles.citationName, { color: colors.text }]}>{name}</Text>
+        <Text style={[styles.citationUrl, { color: colors.textTertiary }]} numberOfLines={1}>
+          {url}
+        </Text>
+      </View>
+      <Ionicons name="open-outline" size={16} color={colors.accentWarm} />
+    </TouchableOpacity>
   );
 }
 
@@ -202,15 +239,35 @@ export default function SettingsScreen() {
           </Section>
 
           <Section title="WIDGETS">
-            <Row icon="phone-portrait-outline" label="Android widgets" value="Enabled in dev build" />
-            <Row icon="logo-apple" label="iOS widgets" value="WidgetKit target" />
+            {Platform.OS === 'ios' ? (
+              <Row icon="logo-apple" label="Home Screen widgets" value="WidgetKit" />
+            ) : (
+              <Row icon="phone-portrait-outline" label="Home screen widgets" value="Enabled" />
+            )}
             <Row icon="refresh-outline" label="Refresh widgets now" onPress={handleRefreshWidgets} isLast />
             <View style={[styles.helperBox, { borderTopColor: colors.border }]}>
               <Text style={[styles.helperText, { color: colors.textTertiary }]}>
-                Life in Weeks compresses your estimated lifetime into a small grid. Filled dots are lived time,
+                Life Dots compresses your estimated lifetime into a small grid. Filled dots are lived time,
                 the ring is your current block, and dim dots are the weeks still ahead.
               </Text>
             </View>
+          </Section>
+
+          <Section title="SOURCES & SAFETY">
+            <View style={[styles.sourceIntro, { borderBottomColor: colors.border }]}>
+              <Ionicons name="shield-checkmark-outline" size={17} color={colors.accentWarm} />
+              <Text style={[styles.sourceIntroText, { color: colors.textTertiary }]}>
+                {LIFE_EXPECTANCY_DISCLAIMER}
+              </Text>
+            </View>
+            {LIFE_EXPECTANCY_SOURCES.map((source, index) => (
+              <CitationLink
+                key={source.url}
+                name={source.name}
+                url={source.url}
+                isLast={index === LIFE_EXPECTANCY_SOURCES.length - 1}
+              />
+            ))}
           </Section>
 
           <Section title="ABOUT">
@@ -259,6 +316,25 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   helperText: { fontSize: 12, lineHeight: 17 },
+  sourceIntro: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: 15,
+    paddingVertical: 13,
+    flexDirection: 'row',
+    gap: 10,
+    alignItems: 'flex-start',
+  },
+  sourceIntroText: { flex: 1, fontSize: 12, lineHeight: 17 },
+  citationRow: {
+    paddingHorizontal: 15,
+    paddingVertical: 13,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  citationTextWrap: { flex: 1, gap: 3 },
+  citationName: { fontSize: 14, fontWeight: '600', lineHeight: 19 },
+  citationUrl: { fontSize: 11 },
   editButton: {
     borderWidth: 1,
     borderRadius: 8,

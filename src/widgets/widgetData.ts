@@ -26,6 +26,7 @@ export interface WidgetData {
   updatedAt: string;
 }
 
+// Placeholder data used by native widgets before the app has written real profile stats.
 export const DEFAULT_WIDGET_DATA: WidgetData = {
   percentageLived: 31,
   percentageRemaining: 69,
@@ -55,6 +56,7 @@ function startOfDay(date: Date) {
 }
 
 function daysUntil(date: Date, now = new Date()) {
+  // Compare calendar days, not exact hours, so milestone widgets read naturally.
   return Math.max(0, Math.ceil((startOfDay(date).getTime() - startOfDay(now).getTime()) / DAY_MS));
 }
 
@@ -97,6 +99,7 @@ export function getTodayCountdown(now = new Date()) {
 
   return {
     minutesRemaining,
+    // Native widgets use this to draw the day progress bar/ring.
     elapsedPercentage: Math.min(Math.max((elapsedMinutes / (24 * 60)) * 100, 0), 100),
     label: `${hours}h ${minutes.toString().padStart(2, '0')}m`,
   };
@@ -139,6 +142,7 @@ export function buildMilestones(profile: UserProfile, now = new Date()): WidgetM
 
   return milestones
     .filter((milestone) => milestone.days >= 0)
+    // Keep only the nearest milestones so the compact widget stays readable.
     .sort((a, b) => a.days - b.days)
     .slice(0, 3);
 }

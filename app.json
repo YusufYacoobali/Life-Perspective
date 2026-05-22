@@ -17,7 +17,9 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.yacoobali.lifeperspective",
       "entitlements": {
-        "com.apple.security.application-groups": ["group.com.yacoobali.lifeperspective"]
+        "com.apple.security.application-groups": [
+          "group.com.yacoobali.lifeperspective"
+        ]
       }
     },
     "android": {
@@ -81,6 +83,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "0986db3f-e65c-4d69-929a-0bb4ddfb94ba"
+      }
     }
   }
 }

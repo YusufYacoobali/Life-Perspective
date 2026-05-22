@@ -9,6 +9,7 @@ import {
   StyleSheet,
   Dimensions,
   Animated,
+  Linking,
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -17,7 +18,7 @@ import { useTheme } from '../src/theme';
 import { AppButton } from '../src/components/AppButton';
 import { AppInput } from '../src/components/AppInput';
 import { saveProfile } from '../src/store/userProfileStore';
-import { COUNTRIES } from '../src/lib/countryData';
+import { COUNTRIES, LIFE_EXPECTANCY_SOURCES } from '../src/lib/countryData';
 import { calculateLifeExpectancy } from '../src/lib/lifeExpectancy';
 import { Gender, SmokingStatus, ActivityLevel, UserProfile } from '../src/types/user';
 import { isReasonableAge, isValidHeight, isValidWeight, ftToCm, lbsToKg } from '../src/lib/validation';
@@ -597,6 +598,20 @@ export default function OnboardingScreen() {
                 <Text style={[s.disclaimer, { color: colors.textTertiary, borderColor: colors.border }]}>
                   This app provides an approximate life expectancy estimate based on broad statistical and lifestyle factors. It is intended for reflection only and is not medical, health or financial advice.
                 </Text>
+                <View style={[s.sourceBox, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+                  <Text style={[s.sourceTitle, { color: colors.text }]}>Sources</Text>
+                  {LIFE_EXPECTANCY_SOURCES.map((source) => (
+                    <TouchableOpacity
+                      key={source.url}
+                      onPress={() => { hapticLight(); Linking.openURL(source.url); }}
+                      activeOpacity={0.7}
+                      style={s.sourceLink}
+                    >
+                      <Ionicons name="open-outline" size={14} color={colors.accent} />
+                      <Text style={[s.sourceText, { color: colors.accent }]}>{source.name}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               </View>
             )}
 
@@ -651,6 +666,15 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 14,
   },
+  sourceBox: {
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 14,
+    gap: 9,
+  },
+  sourceTitle: { fontSize: 12, fontWeight: '800', letterSpacing: 1.2, textTransform: 'uppercase' },
+  sourceLink: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  sourceText: { flex: 1, fontSize: 12, lineHeight: 17, fontWeight: '600' },
   chipRow: { flexDirection: 'row', gap: 12 },
   chipColumn: { gap: 10 },
   unitToggle: { flexDirection: 'row', gap: 8, marginBottom: 8 },

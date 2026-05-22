@@ -40,6 +40,8 @@ export function ageYears(dateString: string) {
 }
 
 function eventsLeft(daysLeft: number, cadenceYears: number) {
+  // Include the next occurrence when there is still time left, so "World Cups left"
+  // means upcoming tournaments the user may still experience.
   const base = Math.floor(daysLeft / (365.25 * cadenceYears));
   return Math.max(0, daysLeft > 0 ? base + 1 : base);
 }
@@ -49,6 +51,7 @@ function eventMarks(days: number, cadenceYears: number) {
 }
 
 function splitMarks(used: number, left: number) {
+  // Visual lenses need at least one mark so empty/zero estimates still render cleanly.
   return {
     marks: Math.max(1, used + left),
     usedMarks: Math.max(0, used),
@@ -62,11 +65,16 @@ export function buildPerspectiveMetrics(profile: UserProfile, stats: LifeStats):
   const adultYearsLived = Math.max(0, Math.min(age, stats.estimatedLifeExpectancyYears) - 18);
   const adultRemainingYears = Math.max(0, stats.estimatedLifeExpectancyYears - Math.max(age, 18));
   const country = getCountryByCode(profile.countryCode);
+  // These are country-level lifestyle/access multipliers for perspective counts.
+  // Example: homeFactor 0.5 means estimate about half as many major home chapters
+  // as the neutral baseline, while 1.1 would estimate slightly more than baseline.
   const travelFactor = country?.travelFactor ?? 0.5;
   const carFactor = country?.carFactor ?? 0.6;
   const phoneFactor = country?.phoneFactor ?? 0.7;
   const homeFactor = country?.homeFactor ?? 0.6;
+  // Neutral travel baseline is 1.1 proper trips per year, adjusted by country.
   const annualTrips = 1.1 * travelFactor;
+  // Higher phoneFactor means shorter expected upgrade cycles; clamp avoids extremes.
   const phoneIntervalYears = Math.max(1.8, 3.2 / Math.max(phoneFactor, 0.3));
 
   const holidaysLeft = Math.round(remainingYears * annualTrips);
@@ -202,6 +210,7 @@ export function buildPerspectiveMetrics(profile: UserProfile, stats: LifeStats):
 export function buildLifeStages(profile: UserProfile, stats: LifeStats): LifeStageMetric[] {
   const age = ageYears(profile.dateOfBirth);
   const expected = stats.estimatedLifeExpectancyYears;
+  // Stage ranges are deliberately simple life chapters for reflection, not clinical age bands.
   const stages = [
     { title: 'Childhood', start: 0, end: 13 },
     { title: 'Teenage years', start: 13, end: 20 },

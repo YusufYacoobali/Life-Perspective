@@ -1,14 +1,39 @@
 export interface CountryData {
   code: string;
   name: string;
+  // LE = life expectancy, stored as estimated years for the selected sex.
   maleLE: number;
   femaleLE: number;
+  // Country factors are rough 0+ multipliers for perspective metrics, not medical inputs:
+  // 1.0 means around the baseline assumption, 0.5 means about half that baseline,
+  // and values above 1 mean the country tends to support more of that event/item.
   travelFactor?: number;
   carFactor?: number;
   phoneFactor?: number;
   homeFactor?: number;
 }
 
+export const LIFE_EXPECTANCY_SOURCES = [
+  {
+    name: 'World Bank - Life expectancy at birth, male (years)',
+    url: 'https://data.worldbank.org/indicator/SP.DYN.LE00.MA.IN',
+  },
+  {
+    name: 'World Bank - Life expectancy at birth, female (years)',
+    url: 'https://data.worldbank.org/indicator/SP.DYN.LE00.FE.IN',
+  },
+  {
+    name: 'World Health Organization - Life expectancy at birth (years)',
+    url: 'https://www.who.int/data/gho/data/indicators/indicator-details/GHO/life-expectancy-at-birth-(years)',
+  },
+] as const;
+
+export const LIFE_EXPECTANCY_DISCLAIMER =
+  'Life expectancy values are rounded country-level estimates for reflection only. They are not medical advice, diagnosis, prediction, or a personal health assessment.';
+
+// Approximate, editable country baselines used for reflection rather than exact prediction.
+// maleLE/femaleLE are rounded from public life-expectancy sources; keep sources visible in-app.
+// travelFactor/carFactor/phoneFactor/homeFactor are gameplay/perspective multipliers only.
 const COUNTRY_ROWS: CountryData[] = [
   { code: 'AF', name: 'Afghanistan', maleLE: 61, femaleLE: 65, travelFactor: 0.15, carFactor: 0.25, phoneFactor: 0.45, homeFactor: 0.45 },
   { code: 'AL', name: 'Albania', maleLE: 75, femaleLE: 80, travelFactor: 0.45, carFactor: 0.65, phoneFactor: 0.65, homeFactor: 0.55 },
@@ -125,10 +150,34 @@ const COUNTRY_ROWS: CountryData[] = [
   { code: 'VN', name: 'Vietnam', maleLE: 71, femaleLE: 79, travelFactor: 0.25, carFactor: 0.3, phoneFactor: 0.65, homeFactor: 0.5 },
   { code: 'ZM', name: 'Zambia', maleLE: 60, femaleLE: 66, travelFactor: 0.12, carFactor: 0.15, phoneFactor: 0.35, homeFactor: 0.4 },
   { code: 'ZW', name: 'Zimbabwe', maleLE: 59, femaleLE: 65, travelFactor: 0.12, carFactor: 0.15, phoneFactor: 0.35, homeFactor: 0.4 },
+  { code: 'BH', name: 'Bahrain', maleLE: 79, femaleLE: 82, travelFactor: 0.85, carFactor: 1.0, phoneFactor: 1.0, homeFactor: 0.75 },
+  { code: 'BW', name: 'Botswana', maleLE: 64, femaleLE: 70, travelFactor: 0.25, carFactor: 0.45, phoneFactor: 0.55, homeFactor: 0.5 },
+  { code: 'CD', name: 'Democratic Republic of the Congo', maleLE: 60, femaleLE: 64, travelFactor: 0.1, carFactor: 0.12, phoneFactor: 0.35, homeFactor: 0.4 },
+  { code: 'CY', name: 'Cyprus', maleLE: 80, femaleLE: 84, travelFactor: 0.9, carFactor: 0.85, phoneFactor: 0.9, homeFactor: 0.75 },
+  { code: 'HT', name: 'Haiti', maleLE: 62, femaleLE: 68, travelFactor: 0.12, carFactor: 0.18, phoneFactor: 0.4, homeFactor: 0.4 },
+  { code: 'LY', name: 'Libya', maleLE: 70, femaleLE: 76, travelFactor: 0.25, carFactor: 0.55, phoneFactor: 0.6, homeFactor: 0.5 },
+  { code: 'MD', name: 'Moldova', maleLE: 67, femaleLE: 76, travelFactor: 0.35, carFactor: 0.55, phoneFactor: 0.6, homeFactor: 0.5 },
+  { code: 'ME', name: 'Montenegro', maleLE: 74, femaleLE: 79, travelFactor: 0.6, carFactor: 0.7, phoneFactor: 0.7, homeFactor: 0.6 },
+  { code: 'MK', name: 'North Macedonia', maleLE: 73, femaleLE: 78, travelFactor: 0.5, carFactor: 0.65, phoneFactor: 0.65, homeFactor: 0.55 },
+  { code: 'NI', name: 'Nicaragua', maleLE: 70, femaleLE: 76, travelFactor: 0.22, carFactor: 0.3, phoneFactor: 0.5, homeFactor: 0.45 },
+  { code: 'KP', name: 'North Korea', maleLE: 69, femaleLE: 76, travelFactor: 0.05, carFactor: 0.15, phoneFactor: 0.25, homeFactor: 0.35 },
+  { code: 'PS', name: 'Palestine', maleLE: 72, femaleLE: 76, travelFactor: 0.2, carFactor: 0.35, phoneFactor: 0.55, homeFactor: 0.45 },
+  { code: 'RW', name: 'Rwanda', maleLE: 66, femaleLE: 71, travelFactor: 0.15, carFactor: 0.18, phoneFactor: 0.45, homeFactor: 0.45 },
+  { code: 'SN', name: 'Senegal', maleLE: 66, femaleLE: 70, travelFactor: 0.18, carFactor: 0.22, phoneFactor: 0.45, homeFactor: 0.45 },
+  { code: 'SO', name: 'Somalia', maleLE: 55, femaleLE: 60, travelFactor: 0.08, carFactor: 0.1, phoneFactor: 0.3, homeFactor: 0.35 },
+  { code: 'SD', name: 'Sudan', maleLE: 64, femaleLE: 68, travelFactor: 0.12, carFactor: 0.18, phoneFactor: 0.4, homeFactor: 0.4 },
+  { code: 'SS', name: 'South Sudan', maleLE: 55, femaleLE: 59, travelFactor: 0.06, carFactor: 0.08, phoneFactor: 0.25, homeFactor: 0.35 },
+  { code: 'SY', name: 'Syria', maleLE: 69, femaleLE: 75, travelFactor: 0.12, carFactor: 0.35, phoneFactor: 0.45, homeFactor: 0.4 },
+  { code: 'YE', name: 'Yemen', maleLE: 63, femaleLE: 67, travelFactor: 0.08, carFactor: 0.12, phoneFactor: 0.3, homeFactor: 0.35 },
   { code: 'OTHER', name: 'Other', maleLE: 71, femaleLE: 75, travelFactor: 0.5, carFactor: 0.6, phoneFactor: 0.7, homeFactor: 0.6 },
 ];
 
 export const COUNTRIES = [...COUNTRY_ROWS].sort((a, b) => a.name.localeCompare(b.name));
+
+
+export function getLifeExpectancySourceText(): string {
+  return `${LIFE_EXPECTANCY_DISCLAIMER}\n\nSources:\n${LIFE_EXPECTANCY_SOURCES.map((s) => `- ${s.name}: ${s.url}`).join('\n')}`;
+}
 
 export function getCountryByCode(code: string): CountryData | undefined {
   return COUNTRIES.find((c) => c.code === code);
